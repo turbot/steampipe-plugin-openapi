@@ -66,7 +66,7 @@ type openAPIComponentSchema struct {
 	Path string
 	Name string
 	openapi3.Schema
-	Properties map[string]*openapi3.Schema
+	Properties map[string]interface{}
 }
 
 //// LIST FUNCTION
@@ -83,8 +83,14 @@ func listOpenAPIComponentSchemas(ctx context.Context, d *plugin.QueryData, h *pl
 	}
 
 	for k, v := range doc.Components.Schemas {
-		result := map[string]*openapi3.Schema{}
+		result := map[string]interface{}{}
 		for i, j := range v.Value.Properties {
+			if j.Ref != "" {
+				result[i] = map[string]string{
+					"$ref": j.Ref,
+				}
+				continue
+			}
 			result[i] = j.Value
 		}
 
