@@ -18,7 +18,7 @@ func tableOpenAPIInfo(ctx context.Context) *plugin.Table {
 		Description: "Info specified by OpenAPI/Swagger standard version 3",
 		List: &plugin.ListConfig{
 			ParentHydrate: listFiles,
-			Hydrate:       listInfo,
+			Hydrate:       listOpenAPIInfo,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
 		Columns: []*plugin.Column{
@@ -40,14 +40,14 @@ type openAPIInfo struct {
 
 //// LIST FUNCTION
 
-func listInfo(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func listOpenAPIInfo(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
 	doc, err := openapi3.NewLoader().LoadFromFile(path)
 	if err != nil {
-		plugin.Logger(ctx).Error("listInfo", "file_error", err, "path", path)
+		plugin.Logger(ctx).Error("openapi_info.listOpenAPIInfo", "file_error", err, "path", path)
 		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
 	}
 	d.StreamListItem(ctx, openAPIInfo{path, *doc.Info})

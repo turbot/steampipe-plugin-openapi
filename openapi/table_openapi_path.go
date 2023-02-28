@@ -3,6 +3,7 @@ package openapi
 import (
 	"context"
 	"fmt"
+	p "path"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -19,7 +20,7 @@ func tableOpenAPIPath(ctx context.Context) *plugin.Table {
 		Description: "Paths specified by OpenAPI/Swagger standard version 3",
 		List: &plugin.ListConfig{
 			ParentHydrate: listFiles,
-			Hydrate:       listPaths,
+			Hydrate:       listOpenAPIPaths,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
 		Columns: []*plugin.Column{
@@ -51,14 +52,14 @@ type openAPIPath struct {
 
 //// LIST FUNCTION
 
-func listPaths(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
 	doc, err := openapi3.NewLoader().LoadFromFile(path)
 	if err != nil {
-		plugin.Logger(ctx).Error("listPaths", "file_error", err, "path", path)
+		plugin.Logger(ctx).Error("openapi_path.listOpenAPIPaths", "file_error", err, "path", path)
 		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
 	}
 
@@ -74,7 +75,7 @@ func listPaths(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) 
 
 			d.StreamListItem(ctx, openAPIPath{
 				Path:      path,
-				ApiPath:   fmt.Sprintf("%s/%s", apiPath, op),
+				ApiPath:   p.Join(apiPath, op),
 				Operation: operation,
 			})
 		}

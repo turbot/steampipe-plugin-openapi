@@ -19,7 +19,7 @@ func tableOpenAPIServer(ctx context.Context) *plugin.Table {
 		Description: "Server specified by OpenAPI/Swagger standard version 3",
 		List: &plugin.ListConfig{
 			ParentHydrate: listFiles,
-			Hydrate:       listServers,
+			Hydrate:       listOpenAPIServers,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
 		Columns: []*plugin.Column{
@@ -38,14 +38,14 @@ type openAPIServer struct {
 
 //// LIST FUNCTION
 
-func listServers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func listOpenAPIServers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
 	doc, err := openapi3.NewLoader().LoadFromFile(path)
 	if err != nil {
-		plugin.Logger(ctx).Error("listServers", "file_error", err, "path", path)
+		plugin.Logger(ctx).Error("openapi_server.listOpenAPIServers", "file_error", err, "path", path)
 		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
 	}
 
