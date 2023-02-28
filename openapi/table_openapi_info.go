@@ -41,7 +41,7 @@ type openAPIInfo struct {
 //// LIST FUNCTION
 
 func listInfo(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	// The path comes from a parent hydate, defaulting to the config paths or
+	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 

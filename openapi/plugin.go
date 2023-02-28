@@ -21,6 +21,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 		},
 		TableMap: map[string]*plugin.Table{
 			"openapi_info":   tableOpenAPIInfo(ctx),
+			"openapi_path":   tableOpenAPIPath(ctx),
 			"openapi_server": tableOpenAPIServer(ctx),
 		},
 	}
