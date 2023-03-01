@@ -29,7 +29,7 @@ func tableOpenAPIComponentSchema(ctx context.Context) *plugin.Table {
 			{Name: "deprecated", Description: "True, if the schema is deprecated.", Type: proto.ColumnType_BOOL},
 			{Name: "title", Description: "The title of the schema.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A description of the schema.", Type: proto.ColumnType_STRING},
-			{Name: "default", Description: "The default value set for the schema.", Type: proto.ColumnType_STRING},
+			{Name: "default_value", Description: "The default value set for the schema.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Default")},
 
 			// boolean fields
 			{Name: "unique_items", Description: "True, if the items in an array are required to be unique.", Type: proto.ColumnType_BOOL},
@@ -53,7 +53,7 @@ func tableOpenAPIComponentSchema(ctx context.Context) *plugin.Table {
 			// info for array type data
 			{Name: "min_items", Description: "Specify the minimum number of items that can be added to the property of type array.", Type: proto.ColumnType_DOUBLE},
 			{Name: "max_items", Description: "Specify the maximum number of items that can be added to the property of type array.", Type: proto.ColumnType_DOUBLE},
-			{Name: "items", Description: "Specify the list of items defined in the property.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Items.Ref")},
+			{Name: "items", Description: "Specify the list of items defined in the property.", Type: proto.ColumnType_JSON},
 
 			{Name: "required", Description: "If true, the property must be defined.", Type: proto.ColumnType_JSON},
 			{Name: "properties", Description: "Describes the schema properties.", Type: proto.ColumnType_JSON},
