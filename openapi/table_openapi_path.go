@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	p "path"
+	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -26,6 +27,7 @@ func tableOpenAPIPath(ctx context.Context) *plugin.Table {
 		Columns: []*plugin.Column{
 			{Name: "api_path", Description: "A relative path to an individual endpoint.", Type: proto.ColumnType_STRING},
 			{Name: "operation_id", Description: "Unique string used to identify the operation.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Operation.OperationID")},
+			{Name: "method", Description: "Specify the HTTP method.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A verbose explanation of the operation behavior.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Operation.Description")},
 			{Name: "deprecated", Description: "True, if the operation to be deprecated.", Type: proto.ColumnType_BOOL, Transform: transform.FromField("Operation.Deprecated")},
 			{Name: "summary", Description: "A short summary of what the operation does.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Operation.Summary")},
@@ -47,6 +49,7 @@ func tableOpenAPIPath(ctx context.Context) *plugin.Table {
 type openAPIPath struct {
 	Path      string
 	ApiPath   string
+	Method    string
 	Operation *openapi3.Operation
 }
 
@@ -76,6 +79,7 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 			d.StreamListItem(ctx, openAPIPath{
 				Path:      path,
 				ApiPath:   p.Join(apiPath, op),
+				Method:    strings.ToUpper(op),
 				Operation: operation,
 			})
 		}

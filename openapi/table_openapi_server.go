@@ -25,7 +25,7 @@ func tableOpenAPIServer(ctx context.Context) *plugin.Table {
 		Columns: []*plugin.Column{
 			{Name: "url", Description: "A URL to the target host.", Type: proto.ColumnType_STRING, Transform: transform.FromField("URL")},
 			{Name: "description", Description: "An optional string describing the host designated by the URL.", Type: proto.ColumnType_STRING},
-			{Name: "variables", Description: "A map between a variable name and its value, used for substitution in the server’s URL template.", Type: proto.ColumnType_JSON},
+			{Name: "variables", Description: "A map between a variable name and its value, used for substitution in the server's URL template.", Type: proto.ColumnType_JSON},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
 		},
 	}
