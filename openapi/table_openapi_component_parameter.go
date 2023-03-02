@@ -24,7 +24,7 @@ func tableOpenAPIComponentParameter(ctx context.Context) *plugin.Table {
 		},
 		Columns: []*plugin.Column{
 			{Name: "name", Description: "The name of the parameter.", Type: proto.ColumnType_STRING},
-			{Name: "in", Description: "The location of the parameter. Possible values are query, header, path or cookie.", Type: proto.ColumnType_STRING},
+			{Name: "location", Description: "The location of the parameter. Possible values are query, header, path or cookie.", Type: proto.ColumnType_STRING, Transform: transform.FromField("In")},
 			{Name: "description", Description: "A brief description of the parameter.", Type: proto.ColumnType_STRING},
 			{Name: "style", Description: "Describes how the parameter value will be serialized depending on the type of the parameter value. Default values (based on value of in): for query - form; for path - simple; for header - simple; for cookie - form.", Type: proto.ColumnType_STRING},
 			{Name: "deprecated", Description: "True, if the parameter is deprecated.", Type: proto.ColumnType_BOOL},
@@ -32,7 +32,7 @@ func tableOpenAPIComponentParameter(ctx context.Context) *plugin.Table {
 			{Name: "allow_empty_value", Description: "", Type: proto.ColumnType_BOOL},
 			{Name: "allow_reserved", Description: "Determines whether the parameter value SHOULD allow reserved characters, as defined by RFC3986 (e.g. :/?#[]@!$&'()*+,;=) to be included without percent-encoding. This property only applies to parameters with an in value of query. The default value is false.", Type: proto.ColumnType_BOOL},
 			{Name: "required", Description: "True, if the parameter is required.", Type: proto.ColumnType_BOOL},
-			{Name: "schema", Description: "The schema of the parameter.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Schema.Value")},
+			{Name: "schema", Description: "The schema of the parameter.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Schema.Value")},
 			{Name: "schema_ref", Description: "The schema reference of the parameter.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Schema.Ref")},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
 		},

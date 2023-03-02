@@ -28,13 +28,15 @@ func tableOpenAPIInfo(ctx context.Context) *plugin.Table {
 			{Name: "terms_of_service", Description: "A URL to the Terms of Service for the API.", Type: proto.ColumnType_STRING},
 			{Name: "contact", Description: "The contact information for the exposed API.", Type: proto.ColumnType_JSON},
 			{Name: "license", Description: "The license information for the exposed API.", Type: proto.ColumnType_JSON},
+			{Name: "specification_version", Description: "The version of the OpenAPI specification.", Type: proto.ColumnType_STRING},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
 		},
 	}
 }
 
 type openAPIInfo struct {
-	Path string
+	Path                 string
+	SpecificationVersion string
 	openapi3.Info
 }
 
@@ -50,7 +52,7 @@ func listOpenAPIInfo(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		plugin.Logger(ctx).Error("openapi_info.listOpenAPIInfo", "file_error", err, "path", path)
 		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
 	}
-	d.StreamListItem(ctx, openAPIInfo{path, *doc.Info})
+	d.StreamListItem(ctx, openAPIInfo{path, doc.OpenAPI, *doc.Info})
 
 	return nil, nil
 }
