@@ -57,6 +57,11 @@ func listOpenAPIComponentParameters(ctx context.Context, d *plugin.QueryData, h 
 		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
 	}
 
+	// Return nil, if no parameters defined
+	if doc.Components == nil || doc.Components.Parameters == nil {
+		return nil, nil
+	}
+
 	for _, v := range doc.Components.Parameters {
 		d.StreamListItem(ctx, openAPIComponentParameter{path, *v.Value})
 	}

@@ -82,19 +82,17 @@ func listOpenAPIComponentSchemas(ctx context.Context, d *plugin.QueryData, h *pl
 		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
 	}
 
-	for k, v := range doc.Components.Schemas {
-		result := map[string]interface{}{}
-		for i, j := range v.Value.Properties {
-			if j.Ref != "" {
-				result[i] = map[string]string{
-					"$ref": j.Ref,
-				}
-				continue
-			}
-			result[i] = j.Value
-		}
+	// Return nil, if no schema defined
+	if doc.Components == nil || doc.Components.Schemas == nil {
+		return nil, nil
+	}
 
-		d.StreamListItem(ctx, openAPIComponentSchema{path, k, *v.Value, result})
+	for k, v := range doc.Components.Schemas {
+		properties := map[string]interface{}{}
+		for i, j := range v.Value.Properties {
+			properties[i] = j.Value
+		}
+		d.StreamListItem(ctx, openAPIComponentSchema{path, k, *v.Value, properties})
 	}
 
 	return nil, nil

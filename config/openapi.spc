@@ -3,6 +3,7 @@ connection "openapi" {
 
   # Paths is a list of locations to search for OpenAPI definition files
   # Paths can be configured with a local directory, a remote Git repository URL, or an S3 bucket URL
+  # Refer https://hub.steampipe.io/plugins/turbot/openapi#supported-path-formats for more information
   # Wildcard based searches are supported, including recursive searches
   # Local paths are resolved relative to the current working directory (CWD)
 
