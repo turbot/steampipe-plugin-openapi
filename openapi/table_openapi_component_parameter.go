@@ -34,6 +34,7 @@ func tableOpenAPIComponentParameter(ctx context.Context) *plugin.Table {
 			{Name: "required", Description: "True, if the parameter is required.", Type: proto.ColumnType_BOOL},
 			{Name: "schema", Description: "The schema of the parameter.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Schema.Value")},
 			{Name: "schema_ref", Description: "The schema reference of the parameter.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Schema.Ref")},
+			{Name: "key", Description: "The key used to refer or search the parameter.", Type: proto.ColumnType_STRING},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
 		},
 	}
@@ -41,6 +42,7 @@ func tableOpenAPIComponentParameter(ctx context.Context) *plugin.Table {
 
 type openAPIComponentParameter struct {
 	Path string
+	Key  string
 	openapi3.Parameter
 }
 
@@ -62,8 +64,8 @@ func listOpenAPIComponentParameters(ctx context.Context, d *plugin.QueryData, h 
 		return nil, nil
 	}
 
-	for _, v := range doc.Components.Parameters {
-		d.StreamListItem(ctx, openAPIComponentParameter{path, *v.Value})
+	for k, v := range doc.Components.Parameters {
+		d.StreamListItem(ctx, openAPIComponentParameter{path, k, *v.Value})
 	}
 
 	return nil, nil

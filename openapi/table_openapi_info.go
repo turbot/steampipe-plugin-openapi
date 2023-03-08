@@ -2,7 +2,6 @@ package openapi
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -47,10 +46,9 @@ func listOpenAPIInfo(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
-	doc, err := openapi3.NewLoader().LoadFromFile(path)
+	doc, err := getDoc(ctx, d, path)
 	if err != nil {
-		plugin.Logger(ctx).Error("openapi_info.listOpenAPIInfo", "file_error", err, "path", path)
-		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
+		return nil, err
 	}
 	d.StreamListItem(ctx, openAPIInfo{path, doc.OpenAPI, *doc.Info})
 

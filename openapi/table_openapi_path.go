@@ -2,7 +2,6 @@ package openapi
 
 import (
 	"context"
-	"fmt"
 	p "path"
 	"strings"
 
@@ -60,10 +59,9 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
-	doc, err := openapi3.NewLoader().LoadFromFile(path)
+	doc, err := getDoc(ctx, d, path)
 	if err != nil {
-		plugin.Logger(ctx).Error("openapi_path.listOpenAPIPaths", "file_error", err, "path", path)
-		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
+		return nil, err
 	}
 
 	operationTypes := []string{"connect", "delete", "get", "head", "options", "patch", "post", "put", "trace"}
