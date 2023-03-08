@@ -21,10 +21,12 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 		},
 		TableMap: map[string]*plugin.Table{
 			"openapi_component_parameter":       tableOpenAPIComponentParameter(ctx),
+			"openapi_component_response":        tableOpenAPIComponentResponse(ctx),
 			"openapi_component_schema":          tableOpenAPIComponentSchema(ctx),
 			"openapi_component_security_scheme": tableOpenAPIComponentSecurityScheme(ctx),
 			"openapi_info":                      tableOpenAPIInfo(ctx),
 			"openapi_path":                      tableOpenAPIPath(ctx),
+			"openapi_path_response":             tableOpenAPIPathResponse(ctx),
 			"openapi_server":                    tableOpenAPIServer(ctx),
 		},
 	}

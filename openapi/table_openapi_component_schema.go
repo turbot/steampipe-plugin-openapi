@@ -15,7 +15,7 @@ import (
 func tableOpenAPIComponentSchema(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_component_schema",
-		Description: "The Schema of the definition of input and output data types",
+		Description: "The cchema of the definition of input and output data types",
 		List: &plugin.ListConfig{
 			ParentHydrate: listFiles,
 			Hydrate:       listOpenAPIComponentSchemas,
