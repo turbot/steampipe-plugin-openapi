@@ -78,19 +78,19 @@ func getDoc(ctx context.Context, d *plugin.QueryData, path string) (*openapi3.T,
 // Memoize() method.
 var getDocCached = plugin.HydrateFunc(getDocUncached).Memoize(memoize.WithCacheKeyFunction(getDocCacheKey))
 
-// getClient is per-region, but Memoize() is per-connection, so a setup
-// a custom cache key with region information in it.
+// getDoc is per-path, but Memoize() is per-connection, so a setup
+// a custom cache key with path information in it.
 func getDocCacheKey(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	// Extract the region from the hydrate data. This is not per-row data,
+	// Extract the path from the hydrate data. This is not per-row data,
 	// but a clever pass through of context for our case.
 	path := h.Item.(string)
 	key := fmt.Sprintf("getDoc-%s", path)
 	return key, nil
 }
 
-// getDocUncached is the actual implementation of getClient, which should
-// be run only once per region per connection. Do not call this directly, use
-// getClient instead.
+// getDocUncached is the actual implementation of getDoc, which should
+// be run only once per path per connection. Do not call this directly, use
+// getDoc instead.
 func getDocUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	// Extract the path from the hydrate data. This is not per-row data,
 	// but a clever pass through of context for our case.
