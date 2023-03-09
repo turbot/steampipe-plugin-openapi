@@ -91,6 +91,11 @@ func listOpenAPIComponentSchemas(ctx context.Context, d *plugin.QueryData, h *pl
 			properties[i] = j.Value
 		}
 		d.StreamListItem(ctx, openAPIComponentSchema{path, k, *v.Value, properties})
+
+		// Context may get cancelled due to manual cancellation or if the limit has been reached
+		if d.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	return nil, nil

@@ -42,6 +42,7 @@ func listOpenAPIServers(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed content of the specified OpenAPI spec file
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
 		return nil, err
@@ -49,6 +50,11 @@ func listOpenAPIServers(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 
 	for _, server := range doc.Servers {
 		d.StreamListItem(ctx, openAPIServer{path, *server})
+
+		// Context may get cancelled due to manual cancellation or if the limit has been reached
+		if d.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	return nil, nil

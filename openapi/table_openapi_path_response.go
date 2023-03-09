@@ -90,7 +90,13 @@ func listOpenAPIPathResponses(ctx context.Context, d *plugin.QueryData, h *plugi
 					})
 				}
 				responseObject.Raw = *response.Value
+
 				d.StreamListItem(ctx, responseObject)
+
+				// Context may get cancelled due to manual cancellation or if the limit has been reached
+				if d.RowsRemaining(ctx) == 0 {
+					return nil, nil
+				}
 			}
 		}
 	}

@@ -80,6 +80,11 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 				Method:    strings.ToUpper(op),
 				Operation: operation,
 			})
+
+			// Context may get cancelled due to manual cancellation or if the limit has been reached
+			if d.RowsRemaining(ctx) == 0 {
+				return nil, nil
+			}
 		}
 	}
 

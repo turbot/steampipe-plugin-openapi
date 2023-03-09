@@ -62,6 +62,7 @@ func listFiles(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	return nil, nil
 }
 
+// getDoc returns the parsed contents of the specified file
 func getDoc(ctx context.Context, d *plugin.QueryData, path string) (*openapi3.T, error) {
 	// Create custom hydrate data to pass through the path. Hydrate data
 	// is normally per-column, but we can hijack it for this case to pass

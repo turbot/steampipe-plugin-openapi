@@ -59,6 +59,11 @@ func listOpenAPIComponentSecuritySchemes(ctx context.Context, d *plugin.QueryDat
 
 	for _, v := range doc.Components.SecuritySchemes {
 		d.StreamListItem(ctx, openAPIComponentSecurityScheme{path, *v.Value})
+
+		// Context may get cancelled due to manual cancellation or if the limit has been reached
+		if d.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	return nil, nil

@@ -2,7 +2,6 @@ package openapi
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -53,10 +52,9 @@ func listOpenAPIComponentParameters(ctx context.Context, d *plugin.QueryData, h 
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
-	doc, err := openapi3.NewLoader().LoadFromFile(path)
+	doc, err := getDoc(ctx, d, path)
 	if err != nil {
-		plugin.Logger(ctx).Error("openapi_component_parameter.listOpenAPIComponentParameters", "file_error", err, "path", path)
-		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
+		return nil, err
 	}
 
 	// Return nil, if no parameters defined
@@ -66,6 +64,11 @@ func listOpenAPIComponentParameters(ctx context.Context, d *plugin.QueryData, h 
 
 	for k, v := range doc.Components.Parameters {
 		d.StreamListItem(ctx, openAPIComponentParameter{path, k, *v.Value})
+
+		// Context may get cancelled due to manual cancellation or if the limit has been reached
+		if d.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	return nil, nil

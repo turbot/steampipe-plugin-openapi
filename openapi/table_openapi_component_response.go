@@ -73,6 +73,11 @@ func listOpenAPIComponentResponses(ctx context.Context, d *plugin.QueryData, h *
 		}
 		responseObject.Raw = *v.Value
 		d.StreamListItem(ctx, responseObject)
+
+		// Context may get cancelled due to manual cancellation or if the limit has been reached
+		if d.RowsRemaining(ctx) == 0 {
+			return nil, nil
+		}
 	}
 
 	return nil, nil
