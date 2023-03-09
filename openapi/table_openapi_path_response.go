@@ -3,6 +3,7 @@ package openapi
 import (
 	"context"
 	p "path"
+	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -23,6 +24,7 @@ func tableOpenAPIPathResponse(ctx context.Context) *plugin.Table {
 		},
 		Columns: []*plugin.Column{
 			{Name: "api_path", Description: "The key of the response object definition.", Type: proto.ColumnType_STRING},
+			{Name: "api_method", Description: "Specifies the HTTP method.", Type: proto.ColumnType_STRING},
 			{Name: "response_status", Description: "The key of the response object definition.", Type: proto.ColumnType_STRING},
 			{Name: "response_ref", Description: "The reference to the components response object.", Type: proto.ColumnType_STRING},
 			{Name: "content", Description: "A map containing descriptions of potential response payloads.", Type: proto.ColumnType_JSON},
@@ -37,6 +39,7 @@ func tableOpenAPIPathResponse(ctx context.Context) *plugin.Table {
 type openAPIPathResponse struct {
 	Path           string
 	ApiPath        string
+	ApiMethod      string
 	ResponseStatus string
 	ResponseRef    string
 	Content        []map[string]interface{}
@@ -70,6 +73,7 @@ func listOpenAPIPathResponses(ctx context.Context, d *plugin.QueryData, h *plugi
 				responseObject := openAPIPathResponse{
 					Path:           path,
 					ApiPath:        p.Join(apiPath, op),
+					ApiMethod:      strings.ToUpper(op),
 					ResponseStatus: responseStatus,
 					Description:    *response.Value.Description,
 					ResponseRef:    response.Ref,

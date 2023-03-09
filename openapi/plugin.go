@@ -19,6 +19,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			Schema:      ConfigSchema,
 		},
 		TableMap: map[string]*plugin.Table{
+			"openapi_component_header":          tableOpenAPIComponentHeader(ctx),
 			"openapi_component_parameter":       tableOpenAPIComponentParameter(ctx),
 			"openapi_component_response":        tableOpenAPIComponentResponse(ctx),
 			"openapi_component_schema":          tableOpenAPIComponentSchema(ctx),
