@@ -11,6 +11,8 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
+var OperationTypes = []string{"connect", "delete", "get", "head", "options", "patch", "post", "put", "trace"}
+
 type filePath struct {
 	Path string
 }

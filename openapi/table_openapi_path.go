@@ -64,9 +64,8 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 		return nil, err
 	}
 
-	operationTypes := []string{"connect", "delete", "get", "head", "options", "patch", "post", "put", "trace"}
 	for apiPath, item := range doc.Paths {
-		for _, op := range operationTypes {
+		for _, op := range OperationTypes {
 			operation := getOperationInfoByType(op, item)
 
 			// Skip if no method defined
