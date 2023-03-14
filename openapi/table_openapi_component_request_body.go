@@ -5,7 +5,6 @@ import (
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -25,16 +24,17 @@ func tableOpenAPIComponentRequestBody(ctx context.Context) *plugin.Table {
 			{Name: "key", Description: "The key used to refer or search the request body.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A brief description of the request body.", Type: proto.ColumnType_STRING},
 			{Name: "required", Description: "True, if the request body is required.", Type: proto.ColumnType_BOOL},
-			{Name: "content", Description: "", Type: proto.ColumnType_JSON, Transform: transform.FromField("Schema.Value")},
+			{Name: "content", Description: "", Type: proto.ColumnType_JSON},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
 		},
 	}
 }
 
 type openAPIComponentRequestBody struct {
-	Path string
-	Key  string
-	openapi3.RequestBody
+	Path    string
+	Key     string
+	Content []map[string]interface{}
+	Raw     openapi3.RequestBody
 }
 
 //// LIST FUNCTION
@@ -55,7 +55,20 @@ func listOpenAPIComponentRequestBodies(ctx context.Context, d *plugin.QueryData,
 	}
 
 	for k, v := range doc.Components.RequestBodies {
-		d.StreamListItem(ctx, openAPIComponentRequestBody{path, k, *v.Value})
+		requestBodyObject := openAPIComponentRequestBody{
+			Path: path,
+			Key:  k,
+		}
+
+		for header, content := range v.Value.Content {
+			requestBodyObject.Content = append(requestBodyObject.Content, map[string]interface{}{
+				"contentType": header,
+				"schema":      content.Schema,
+				"schemaType":  content.Schema.Value.Type,
+			})
+		}
+		requestBodyObject.Raw = *v.Value
+		d.StreamListItem(ctx, requestBodyObject)
 
 		// Context may get cancelled due to manual cancellation or if the limit has been reached
 		if d.RowsRemaining(ctx) == 0 {
