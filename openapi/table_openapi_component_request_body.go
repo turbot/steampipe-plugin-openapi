@@ -63,8 +63,10 @@ func listOpenAPIComponentRequestBodies(ctx context.Context, d *plugin.QueryData,
 		for header, content := range v.Value.Content {
 			requestBodyObject.Content = append(requestBodyObject.Content, map[string]interface{}{
 				"contentType": header,
+				"examples":    content.Examples,
 				"schema":      content.Schema,
 				"schemaType":  content.Schema.Value.Type,
+				"encoding":    content.Encoding,
 			})
 		}
 		requestBodyObject.Raw = *v.Value

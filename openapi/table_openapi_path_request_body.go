@@ -88,6 +88,7 @@ func listOpenAPIPathRequestBodies(ctx context.Context, d *plugin.QueryData, h *p
 					"examples":    content.Examples,
 					"schema":      schema,
 					"schemaType":  content.Schema.Value.Type,
+					"encoding":    content.Encoding,
 				})
 				requestBodyObject.Raw = *operation.RequestBody.Value
 			}

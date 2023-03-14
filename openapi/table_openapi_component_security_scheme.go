@@ -22,6 +22,7 @@ func tableOpenAPIComponentSecurityScheme(ctx context.Context) *plugin.Table {
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
 		Columns: []*plugin.Column{
+			{Name: "key", Description: "The key used to refer or search the security scheme.", Type: proto.ColumnType_STRING},
 			{Name: "name", Description: "The name of the header, query or cookie parameter to be used.", Type: proto.ColumnType_STRING},
 			{Name: "type", Description: "The type of the security scheme. Valid values are apiKey, http, mutualTLS, oauth2, openIdConnect.", Type: proto.ColumnType_STRING},
 			{Name: "location", Description: "The location of the API key. Possible values are query, header or cookie.", Type: proto.ColumnType_STRING, Transform: transform.FromField("In")},
@@ -37,6 +38,7 @@ func tableOpenAPIComponentSecurityScheme(ctx context.Context) *plugin.Table {
 
 type openAPIComponentSecurityScheme struct {
 	Path string
+	Key  string
 	openapi3.SecurityScheme
 }
 
@@ -57,8 +59,8 @@ func listOpenAPIComponentSecuritySchemes(ctx context.Context, d *plugin.QueryDat
 		return nil, nil
 	}
 
-	for _, v := range doc.Components.SecuritySchemes {
-		d.StreamListItem(ctx, openAPIComponentSecurityScheme{path, *v.Value})
+	for k, v := range doc.Components.SecuritySchemes {
+		d.StreamListItem(ctx, openAPIComponentSecurityScheme{path, k, *v.Value})
 
 		// Context may get cancelled due to manual cancellation or if the limit has been reached
 		if d.RowsRemaining(ctx) == 0 {
