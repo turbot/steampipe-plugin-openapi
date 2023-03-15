@@ -14,9 +14,9 @@ import (
 func tableOpenAPIComponentResponse(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_component_response",
-		Description: "Describes the response from an API Operation",
+		Description: "Components response object.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIComponentResponses,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -46,16 +46,19 @@ func listOpenAPIComponentResponses(ctx context.Context, d *plugin.QueryData, h *
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_response.listOpenAPIComponentResponses", "parse_error", err)
 		return nil, err
 	}
 
-	// Return nil, if no schema defined
+	// Return nil, if no responses object defined
 	if doc.Components == nil || doc.Components.Responses == nil {
 		return nil, nil
 	}
 
+	// For each response, scan its arguments
 	for k, v := range doc.Components.Responses {
 		responseObject := openAPIComponentResponse{
 			Path:        path,

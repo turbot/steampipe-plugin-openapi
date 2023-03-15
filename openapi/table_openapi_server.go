@@ -15,9 +15,9 @@ import (
 func tableOpenAPIServer(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_server",
-		Description: "Server specified by OpenAPI/Swagger standard version 3",
+		Description: "Server object specified in OpenAPI specification file.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIServers,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -42,12 +42,14 @@ func listOpenAPIServers(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
-	// Get the parsed content of the specified OpenAPI spec file
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_server.listOpenAPIServers", "parse_error", err)
 		return nil, err
 	}
 
+	// For each server, scan its arguments
 	for _, server := range doc.Servers {
 		d.StreamListItem(ctx, openAPIServer{path, *server})
 

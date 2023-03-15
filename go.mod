@@ -3,7 +3,7 @@ module github.com/turbot/steampipe-plugin-openapi
 go 1.19
 
 require (
-	github.com/getkin/kin-openapi v0.114.0
+	github.com/getkin/kin-openapi v0.115.0
 	github.com/turbot/go-kit v0.5.0
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.2.0
 )

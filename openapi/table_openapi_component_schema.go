@@ -15,9 +15,9 @@ import (
 func tableOpenAPIComponentSchema(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_component_schema",
-		Description: "The schema of the definition of input and output data types",
+		Description: "Components schema object.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIComponentSchemas,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -75,16 +75,19 @@ func listOpenAPIComponentSchemas(ctx context.Context, d *plugin.QueryData, h *pl
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_schema.listOpenAPIComponentSchemas", "parse_error", err)
 		return nil, err
 	}
 
-	// Return nil, if no schema defined
+	// Return nil, if no schemas object defined
 	if doc.Components == nil || doc.Components.Schemas == nil {
 		return nil, nil
 	}
 
+	// For each schema, scan its arguments
 	for k, v := range doc.Components.Schemas {
 		properties := map[string]interface{}{}
 		for i, j := range v.Value.Properties {

@@ -15,9 +15,9 @@ import (
 func tableOpenAPIComponentSecurityScheme(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_component_security_scheme",
-		Description: "The security requirements for an API",
+		Description: "Components security scheme object.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIComponentSecuritySchemes,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -49,16 +49,19 @@ func listOpenAPIComponentSecuritySchemes(ctx context.Context, d *plugin.QueryDat
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_security_scheme.listOpenAPIComponentSecuritySchemes", "parse_error", err)
 		return nil, err
 	}
 
-	// Return nil, if no parameters defined
+	// Return nil, if no security schemes object defined
 	if doc.Components == nil || doc.Components.SecuritySchemes == nil {
 		return nil, nil
 	}
 
+	// For each security scheme, scan its arguments
 	for k, v := range doc.Components.SecuritySchemes {
 		d.StreamListItem(ctx, openAPIComponentSecurityScheme{path, k, *v.Value})
 

@@ -14,9 +14,9 @@ import (
 func tableOpenAPIComponentRequestBody(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_component_request_body",
-		Description: "",
+		Description: "Components request body object.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIComponentRequestBodies,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -24,7 +24,7 @@ func tableOpenAPIComponentRequestBody(ctx context.Context) *plugin.Table {
 			{Name: "key", Description: "The key used to refer or search the request body.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A brief description of the request body.", Type: proto.ColumnType_STRING},
 			{Name: "required", Description: "True, if the request body is required.", Type: proto.ColumnType_BOOL},
-			{Name: "content", Description: "", Type: proto.ColumnType_JSON},
+			{Name: "content", Description: "The content of the request body.", Type: proto.ColumnType_JSON},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
 		},
 	}
@@ -46,14 +46,16 @@ func listOpenAPIComponentRequestBodies(ctx context.Context, d *plugin.QueryData,
 
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_request_body.listOpenAPIComponentRequestBodies", "parse_error", err)
 		return nil, err
 	}
 
-	// Return nil, if no callbacks defined
+	// Return nil, if no request bodies object defined
 	if doc.Components == nil || doc.Components.RequestBodies == nil {
 		return nil, nil
 	}
 
+	// For each request body, scan its arguments
 	for k, v := range doc.Components.RequestBodies {
 		requestBodyObject := openAPIComponentRequestBody{
 			Path: path,

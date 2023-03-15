@@ -16,9 +16,9 @@ import (
 func tableOpenAPIPathRequestBody(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_path_request_body",
-		Description: "Describes the request body from an API Operation",
+		Description: "Path request body object.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIPathRequestBodies,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -26,7 +26,7 @@ func tableOpenAPIPathRequestBody(ctx context.Context) *plugin.Table {
 			{Name: "api_path", Description: "The key of the request body object definition.", Type: proto.ColumnType_STRING},
 			{Name: "api_method", Description: "Specifies the HTTP method.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A description of the request body.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Raw.Description")},
-			{Name: "required", Description: "", Type: proto.ColumnType_BOOL, Transform: transform.FromField("Raw.Required")},
+			{Name: "required", Description: "If true, the request body is required.", Type: proto.ColumnType_BOOL, Transform: transform.FromField("Raw.Required")},
 			{Name: "request_body_ref", Description: "The reference to the components request body object.", Type: proto.ColumnType_STRING},
 			{Name: "content", Description: "A map containing descriptions of potential request body payloads.", Type: proto.ColumnType_JSON},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
@@ -50,11 +50,14 @@ func listOpenAPIPathRequestBodies(ctx context.Context, d *plugin.QueryData, h *p
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_path_request_body.listOpenAPIPathRequestBodies", "parse_error", err)
 		return nil, err
 	}
 
+	// For each path, scan its request body object arguments
 	for apiPath, item := range doc.Paths {
 		for _, op := range OperationTypes {
 			operation := getOperationInfoByType(op, item)

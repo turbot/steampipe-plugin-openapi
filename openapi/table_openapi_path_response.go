@@ -16,9 +16,9 @@ import (
 func tableOpenAPIPathResponse(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_path_response",
-		Description: "Describes the response from an API Operation",
+		Description: "Path response object.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIPathResponses,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -54,11 +54,14 @@ func listOpenAPIPathResponses(ctx context.Context, d *plugin.QueryData, h *plugi
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_path_response.listOpenAPIPathResponses", "parse_error", err)
 		return nil, err
 	}
 
+	// For each path, scan its response object arguments
 	for apiPath, item := range doc.Paths {
 		for _, op := range OperationTypes {
 			operation := getOperationInfoByType(op, item)

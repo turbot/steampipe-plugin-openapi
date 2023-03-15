@@ -17,9 +17,9 @@ import (
 func tableOpenAPIPath(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_path",
-		Description: "Paths specified by OpenAPI/Swagger standard version 3",
+		Description: "Path object specified in OpenAPI specification file.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIPaths,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -59,11 +59,14 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_path.listOpenAPIPaths", "parse_error", err)
 		return nil, err
 	}
 
+	// For each path, scan its arguments
 	for apiPath, item := range doc.Paths {
 		for _, op := range OperationTypes {
 			operation := getOperationInfoByType(op, item)

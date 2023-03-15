@@ -15,9 +15,9 @@ import (
 func tableOpenAPIComponentHeader(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_component_header",
-		Description: "The headers information defined in the components",
+		Description: "Components headers object.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIComponentHeaders,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -29,7 +29,7 @@ func tableOpenAPIComponentHeader(ctx context.Context) *plugin.Table {
 			{Name: "style", Description: "Describes how the header value will be serialized depending on the type of the header value. Default values (based on value of in): for query - form; for path - simple; for header - simple; for cookie - form.", Type: proto.ColumnType_STRING},
 			{Name: "deprecated", Description: "True, if the header is deprecated.", Type: proto.ColumnType_BOOL},
 			{Name: "explode", Description: "If true, header values of type array or object generate separate headers for each value of the array or key-value pair of the map.", Type: proto.ColumnType_BOOL},
-			{Name: "allow_empty_value", Description: "", Type: proto.ColumnType_BOOL},
+			{Name: "allow_empty_value", Description: "If true, the header allows an empty value to be set.", Type: proto.ColumnType_BOOL},
 			{Name: "allow_reserved", Description: "Determines whether the header value SHOULD allow reserved characters, as defined by RFC3986 (e.g. :/?#[]@!$&'()*+,;=) to be included without percent-encoding. This property only applies to headers with an in value of query. The default value is false.", Type: proto.ColumnType_BOOL},
 			{Name: "required", Description: "True, if the header is required.", Type: proto.ColumnType_BOOL},
 			{Name: "schema", Description: "The schema of the header.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Schema.Value")},
@@ -52,16 +52,19 @@ func listOpenAPIComponentHeaders(ctx context.Context, d *plugin.QueryData, h *pl
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_header.listOpenAPIComponentHeaders", "parse_error", err)
 		return nil, err
 	}
 
-	// Return nil, if no schema defined
+	// Return nil, if no headers object defined
 	if doc.Components == nil || doc.Components.Headers == nil {
 		return nil, nil
 	}
 
+	// For each header, scan its arguments
 	for k, v := range doc.Components.Headers {
 		d.StreamListItem(ctx, openAPIComponentHeader{path, k, *v.Value})
 

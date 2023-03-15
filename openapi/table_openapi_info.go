@@ -14,9 +14,9 @@ import (
 func tableOpenAPIInfo(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "openapi_info",
-		Description: "Info specified by OpenAPI/Swagger standard version 3",
+		Description: "Info object specified in OpenAPI specification file.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listFiles,
+			ParentHydrate: listOpenAPIFiles,
 			Hydrate:       listOpenAPIInfo,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
@@ -46,8 +46,10 @@ func listOpenAPIInfo(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
+		plugin.Logger(ctx).Error("openapi_info.listOpenAPIInfo", "parse_error", err)
 		return nil, err
 	}
 	d.StreamListItem(ctx, openAPIInfo{path, doc.OpenAPI, *doc.Info})

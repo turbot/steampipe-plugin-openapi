@@ -17,7 +17,7 @@ type filePath struct {
 	Path string
 }
 
-func listFiles(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
+func listOpenAPIFiles(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	// #1 - Path via qual
 
 	// If the path was requested through qualifier then match it exactly. Globs
