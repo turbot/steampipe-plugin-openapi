@@ -42,7 +42,7 @@ from
 
 - **[Table definitions & examples →](/plugins/turbot/openapi/tables)**
 
-## Get started
+## Quick start
 
 ### Install
 
