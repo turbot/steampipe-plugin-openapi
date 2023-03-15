@@ -24,7 +24,7 @@ func tableOpenAPIComponentHeader(ctx context.Context) *plugin.Table {
 		Columns: []*plugin.Column{
 			{Name: "key", Description: "The key used to refer or search the header.", Type: proto.ColumnType_STRING},
 			{Name: "name", Description: "The name of the header.", Type: proto.ColumnType_STRING},
-			{Name: "location", Description: "The location of the header. Possible values are query, header, path or cookie.", Type: proto.ColumnType_STRING, Transform: transform.FromField("In")},
+			{Name: "location", Description: "The location of the header. Possible values are query, header, path or cookie.", Type: proto.ColumnType_STRING, Transform: transform.FromField("In").NullIfZero()},
 			{Name: "description", Description: "A brief description of the header.", Type: proto.ColumnType_STRING},
 			{Name: "style", Description: "Describes how the header value will be serialized depending on the type of the header value. Default values (based on value of in): for query - form; for path - simple; for header - simple; for cookie - form.", Type: proto.ColumnType_STRING},
 			{Name: "deprecated", Description: "True, if the header is deprecated.", Type: proto.ColumnType_BOOL},
