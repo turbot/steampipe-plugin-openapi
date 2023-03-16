@@ -430,8 +430,8 @@ github.com/tkrajina/go-reflector v0.5.6 h1:hKQ0gyocG7vgMD2M3dRlYN6WBBOmdoOzJ6njQ
 github.com/tkrajina/go-reflector v0.5.6/go.mod h1:ECbqLgccecY5kPmPmXg1MrHW585yMcDkVl6IvJe64T4=
 github.com/turbot/go-kit v0.5.0 h1:bulbpYGyOQWt4/qFAULPBdrLis//sf3VFz5mTZelv0k=
 github.com/turbot/go-kit v0.5.0/go.mod h1:oP9gLk6bETL4nkEuujZZbOlcv9jnHQlf7DYcI/+Ke8Q=
-github.com/turbot/steampipe-plugin-sdk/v5 v5.2.0 h1:0ZtmYd4Tfiamt8h/33+dWyz2MqbxIMZo9YiHzNgeQnk=
-github.com/turbot/steampipe-plugin-sdk/v5 v5.2.0/go.mod h1:bfvdKaLwemr13EPOMbnr7/hOQOO7m4oM7HnVMdNotgY=
+github.com/turbot/steampipe-plugin-sdk/v5 v5.3.0 h1:md2iWhVXJQ6zWvyyNWmE5p6pp7tZkVtVl8RxWLFf/dM=
+github.com/turbot/steampipe-plugin-sdk/v5 v5.3.0/go.mod h1:bfvdKaLwemr13EPOMbnr7/hOQOO7m4oM7HnVMdNotgY=
 github.com/ugorji/go v1.2.7 h1:qYhyWUUd6WbiM+C6JZAUkIJt/1WrjzNHY9+KCIjVqTo=
 github.com/ugorji/go v1.2.7/go.mod h1:nF9osbDWLy6bDVv/Rtoh6QgnvNDpmCalQV5urGCCS6M=
 github.com/ugorji/go/codec v1.2.7 h1:YPXUKf7fYbp/y8xloBqZOw2qaVggbfwMlI8WM3wZUJ0=
