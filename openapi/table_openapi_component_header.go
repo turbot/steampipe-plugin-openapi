@@ -33,7 +33,7 @@ func tableOpenAPIComponentHeader(ctx context.Context) *plugin.Table {
 			{Name: "allow_reserved", Description: "Determines whether the header value SHOULD allow reserved characters, as defined by RFC3986 (e.g. :/?#[]@!$&'()*+,;=) to be included without percent-encoding. This property only applies to headers with an in value of query. The default value is false.", Type: proto.ColumnType_BOOL},
 			{Name: "required", Description: "True, if the header is required.", Type: proto.ColumnType_BOOL},
 			{Name: "schema", Description: "The schema of the header.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Schema.Value")},
-			{Name: "schema_ref", Description: "The schema reference of the header.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Schema.Ref")},
+			{Name: "schema_ref", Description: "The schema reference of the header.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Schema.Ref").Transform(transform.NullIfZeroValue)},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
 		},
 	}

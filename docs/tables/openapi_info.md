@@ -29,3 +29,18 @@ select
 from
   openapi_info;
 ```
+
+### List API specifications not using any license
+
+```sql
+select
+  title,
+  version,
+  contact ->> 'name' as maintainer_name,
+  contact ->> 'email' as maintainer_email,
+  path
+from
+  openapi_info
+where
+  license is null;
+```

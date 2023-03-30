@@ -44,3 +44,39 @@ from
   list_parameters as l
   join openapi_component_parameter as p on l.parameter_ref = concat('#/components/parameters/', p.name);
 ```
+
+### List parameters with no schema
+
+```sql
+select
+  name,
+  description,
+  location,
+  deprecated,
+  required,
+  schema,
+  path
+from
+  openapi_component_parameter
+where
+  schema is null
+  and schema_ref is null;
+```
+
+### List deprecated parameters with no alternative mentioned in the description
+
+```sql
+select
+  name,
+  description,
+  location,
+  deprecated,
+  required,
+  schema,
+  path
+from
+  openapi_component_parameter
+where
+  deprecated
+  and description is null;
+```

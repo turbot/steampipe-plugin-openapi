@@ -1,6 +1,6 @@
 # Table: openapi_component_security_scheme
 
-The table `openapi_component_security_scheme` describes the way to define the security requirements for an API.  A security scheme is a named set of security requirements that can be applied to one or more endpoints in the API.
+The table `openapi_component_security_scheme` describes the way to define the security requirements for an API. A security scheme is a named set of security requirements that can be applied to one or more endpoints in the API.
 
 Security schemes can be applied globally to the entire API, or to specific endpoints or operations. For each endpoint or operation, the security scheme(s) that are required to access that endpoint or operation are specified.
 
@@ -35,7 +35,7 @@ where
   s.path is null;
 ```
 
-### List oauth 1.0 security schemes
+### List OAuth 1.0 security schemes
 
 ```sql
 select
@@ -52,7 +52,7 @@ where
   and scheme = 'oauth';
 ```
 
-### List security schemes using basic authentication
+### List security schemes using basic HTTP authentication
 
 ```sql
 select

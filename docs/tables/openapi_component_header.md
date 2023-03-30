@@ -54,3 +54,35 @@ select
 from
   unused_headers_definitions;
 ```
+
+### List headers with no schema
+
+```sql
+select
+  key,
+  location,
+  deprecated,
+  description,
+  path
+from
+  openapi_component_header
+where
+  schema is null
+  and schema_ref is null;
+```
+
+### List deprecated headers with no alternative mentioned in the description
+
+```sql
+select
+  key,
+  location,
+  deprecated,
+  description,
+  path
+from
+  openapi_component_header
+where
+  deprecated
+  and description is null;
+```

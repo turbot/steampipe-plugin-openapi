@@ -30,10 +30,10 @@ func tableOpenAPIComponentParameter(ctx context.Context) *plugin.Table {
 			{Name: "deprecated", Description: "True, if the parameter is deprecated.", Type: proto.ColumnType_BOOL},
 			{Name: "explode", Description: "If true, parameter values of type array or object generate separate parameters for each value of the array or key-value pair of the map.", Type: proto.ColumnType_BOOL},
 			{Name: "allow_empty_value", Description: "If true, an empty value can be set to the parameter.", Type: proto.ColumnType_BOOL},
-			{Name: "allow_reserved", Description: "Determines whether the parameter value SHOULD allow reserved characters, as defined by RFC3986 (e.g. :/?#[]@!$&'()*+,;=) to be included without percent-encoding. This property only applies to parameters with an in value of query. The default value is false.", Type: proto.ColumnType_BOOL},
+			{Name: "allow_reserved", Description: "Determines whether the parameter value should allow reserved characters, as defined by RFC3986 (e.g. :/?#[]@!$&'()*+,;=) to be included without percent-encoding. This property only applies to parameters with an in value of query. The default value is false.", Type: proto.ColumnType_BOOL},
 			{Name: "required", Description: "True, if the parameter is required.", Type: proto.ColumnType_BOOL},
 			{Name: "schema", Description: "The schema of the parameter.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Schema.Value")},
-			{Name: "schema_ref", Description: "The schema reference of the parameter.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Schema.Ref")},
+			{Name: "schema_ref", Description: "The schema reference of the parameter.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Schema.Ref").Transform(transform.NullIfZeroValue)},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
 		},
 	}

@@ -105,7 +105,7 @@ func getDocUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
 	}
 
-	plugin.Logger(ctx).Trace("getDocUncached", "connection_name", d.Connection.Name, "path", path, "status", "done")
+	plugin.Logger(ctx).Debug("getDocUncached", "connection_name", d.Connection.Name, "path", path, "status", "done")
 
 	return doc, nil
 }
