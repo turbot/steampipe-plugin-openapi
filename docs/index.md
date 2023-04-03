@@ -2,7 +2,7 @@
 organization: Turbot
 category: ["software development"]
 icon_url: "/images/plugins/turbot/openapi.svg"
-brand_color: "#4c5b31"
+brand_color: "#4C5B31"
 display_name: "OpenAPI"
 short_name: "openapi"
 description: "Steampipe plugin to query introspection of the OpenAPI definition."
