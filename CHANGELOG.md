@@ -1,3 +1,10 @@
+## v0.0.2 [2023-03-03]
+
+_Bug fixes_
+
+- Fixed the default value of the `paths` argument in the `config/openapi.spc` file to also include `.yml` and `.yaml` files in the current working directory. ([#4](https://github.com/turbot/steampipe-plugin-openapi/pull/4))
+- Fixed the brand color.
+
 ## v0.0.1 [2023-03-31]
 
 _What's new?_
