@@ -144,7 +144,8 @@ You can also configure `paths` with any Git remote repository URLs, e.g., GitHub
 
 For example:
 
-- `github.com/OAI/OpenAPI-Specification//examples/v2.0/json//*.json` matches all top-level OpenAPI definition files in the specified repository.
+- `github.com/OAI/OpenAPI-Specification//examples/v2.0/json//*.json` matches all top-level OpenAPI JSON definition files in the specified repository.
+- `github.com/OAI/OpenAPI-Specification//examples/v2.0/yaml//*.yaml` matches all top-level OpenAPI YAML definition files in the specified repository.
 - `github.com/OAI/OpenAPI-Specification//examples/v2.0//**/*.json` matches all OpenAPI definition files in the specified repository and all subdirectories.
 
 You can specify a subdirectory after a double-slash (`//`) if you want to download only a specific subdirectory from a downloaded directory.
