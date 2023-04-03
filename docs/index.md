@@ -72,8 +72,8 @@ connection "openapi" {
 
   # For example:
   #  - "*.json" matches all OpenAPI JSON definition files in the CWD
-  #  - "**/*.json" matches all OpenAPI definition JSON files in the CWD and all sub-directories
-  #  - "../*.json" matches all OpenAPI definition JSON files in the CWD's parent directory
+  #  - "**/*.json" matches all OpenAPI JSON definition files in the CWD and all sub-directories
+  #  - "../*.json" matches all OpenAPI JSON definition files in the CWD's parent directory
   #  - "*.yml" or "*.yaml" matches all OpenAPI YML or YAML definition files in the CWD
   #  - "**/*.yml" or "**/*.yaml" matches all OpenAPI YML or YAML definition files in the CWD and all sub-directories
   #  - "../*.yml" or "../*.yaml" matches all OpenAPI YML or YAML definition files in the CWD's parent directory
