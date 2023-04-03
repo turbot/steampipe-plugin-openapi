@@ -8,16 +8,19 @@ connection "openapi" {
   # Local paths are resolved relative to the current working directory (CWD)
 
   # For example:
-  #  - "*.json" matches all OpenAPI definition files in the CWD
-  #  - "**/*.json" matches all OpenAPI definition files in the CWD and all sub-directories
-  #  - "../*.json" matches all OpenAPI definition files in the CWD's parent directory
-  #  - "steampipe*.json" matches all OpenAPI definition files starting with "steampipe" in the CWD
-  #  - "/path/to/dir/*.json" matches all OpenAPI definition files in a specific directory
-  #  - "/path/to/dir/main.json" matches a specific file
+  #  - "*.json" matches all OpenAPI JSON definition files in the CWD
+  #  - "**/*.json" matches all OpenAPI JSON definition files in the CWD and all sub-directories
+  #  - "../*.json" matches all OpenAPI JSON definition files in the CWD's parent directory
+  #  - "*.yml" or "*.yaml" matches all OpenAPI YML or YAML definition files in the CWD
+  #  - "**/*.yml" or "**/*.yaml" matches all OpenAPI YML or YAML definition files in the CWD and all sub-directories
+  #  - "../*.yml" or "../*.yaml" matches all OpenAPI YML or YAML definition files in the CWD's parent directory
+  #  - "steampipe*.json" or "steampipe*.yml" or "steampipe*.yaml" matches all OpenAPI definition files starting with "steampipe" in the CWD
+  #  - "/path/to/dir/*.json" or "/path/to/dir/*.yml" or "/path/to/dir/*.yaml" matches all OpenAPI definition files in a specific directory
+  #  - "/path/to/dir/main.json" or "/path/to/dir/main.yml" or "/path/to/dir/main.yaml" matches a specific file
 
   # If paths includes "*", all files (including non-OpenAPI definition files) in
   # the CWD will be matched, which may cause errors if incompatible file types exist
 
   # Defaults to CWD
-  paths = [ "*.json" ]
+  paths = [ "*.json", "*.yml", "*.yaml" ]
 }
