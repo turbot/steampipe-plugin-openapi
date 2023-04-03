@@ -71,18 +71,21 @@ connection "openapi" {
   # Local paths are resolved relative to the current working directory (CWD)
 
   # For example:
-  #  - "*.json" matches all OpenAPI definition files in the CWD
-  #  - "**/*.json" matches all OpenAPI definition files in the CWD and all sub-directories
-  #  - "../*.json" matches all OpenAPI definition files in the CWD's parent directory
-  #  - "steampipe*.json" matches all OpenAPI definition files starting with "steampipe" in the CWD
-  #  - "/path/to/dir/*.json" matches all OpenAPI definition files in a specific directory
-  #  - "/path/to/dir/main.json" matches a specific file
+  #  - "*.json" matches all OpenAPI JSON definition files in the CWD
+  #  - "**/*.json" matches all OpenAPI definition JSON files in the CWD and all sub-directories
+  #  - "../*.json" matches all OpenAPI definition JSON files in the CWD's parent directory
+  #  - "*.yml" or "*.yaml" matches all OpenAPI YML or YAML definition files in the CWD
+  #  - "**/*.yml" or "**/*.yaml" matches all OpenAPI YML or YAML definition files in the CWD and all sub-directories
+  #  - "../*.yml" or "../*.yaml" matches all OpenAPI YML or YAML definition files in the CWD's parent directory
+  #  - "steampipe*.json" or "steampipe*.yml" or "steampipe*.yaml" matches all OpenAPI definition files starting with "steampipe" in the CWD
+  #  - "/path/to/dir/*.json" or "/path/to/dir/*.yml" or "/path/to/dir/*.yaml" matches all OpenAPI definition files in a specific directory
+  #  - "/path/to/dir/main.json" or "/path/to/dir/main.yml" or "/path/to/dir/main.yaml" matches a specific file
 
   # If paths includes "*", all files (including non-OpenAPI definition files) in
   # the CWD will be matched, which may cause errors if incompatible file types exist
 
   # Defaults to CWD
-  paths = [ "*.json" ]
+  paths = [ "*.json", "*.yml", "*.yaml" ]
 }
 ```
 
@@ -112,26 +115,26 @@ connection "openapi" {
 }
 ```
 
-**Note**: If any path matches on `*` without `.json` or `*.yaml`, all files (including non-OpenAPI definition files) in the directory will be matched, which may cause errors if incompatible file types exist.
+**Note**: If any path matches on `*` without `.json` or `*.yml` or `*.yaml`, all files (including non-OpenAPI definition files) in the directory will be matched, which may cause errors if incompatible file types exist.
 
 #### Configuring Local File Paths
 
 You can define a list of local directory paths to search for OpenAPI specification files. Paths are resolved relative to the current working directory. For example:
 
-- `*.json` matches all OpenAPI definition files in the CWD.
-- `**/*.json` matches all OpenAPI definition files in the CWD and all sub-directories.
-- `../*.json` matches all OpenAPI definition files in the CWD's parent directory.
-- `steampipe*.json` matches all OpenAPI definition files starting with "steampipe" in the CWD.
-- `/path/to/dir/*.json` matches all OpenAPI definition files in a specific directory. For example:
-  - `~/*.json` matches all OpenAPI definition files in the home directory.
-  - `~/**/*.json` matches all OpenAPI definition files recursively in the home directory.
-- `/path/to/dir/main.json` matches a specific file.
+- `*.json` or `*.yml` or `*.yaml` matches all OpenAPI definition files in the CWD.
+- `**/*.json` or `**/*.yml` or `**/*.yaml` matches all OpenAPI definition files in the CWD and all sub-directories.
+- `../*.json` or `../*.yml` or `../*.yaml` matches all OpenAPI definition files in the CWD's parent directory.
+- `steampipe*.json` or `steampipe*.yml` or `steampipe*.yaml` matches all OpenAPI definition files starting with "steampipe" in the CWD.
+- `/path/to/dir/*.json` or `/path/to/dir/*.yml` or `/path/to/dir/*.yaml`  matches all OpenAPI definition files in a specific directory. For example:
+  - `~/*.json` or `~/*.yml` or `~/*.yaml` matches all OpenAPI definition files in the home directory.
+  - `~/**/*.json` or `~/**/*.yml` or `~/**/*.yaml` matches all OpenAPI definition files recursively in the home directory.
+- `/path/to/dir/main.json` or `/path/to/dir/main.yml` or `/path/to/dir/main.yaml` matches a specific file.
 
 ```hcl
 connection "openapi" {
   plugin = "openapi"
 
-  paths = [ "*.json", "~/*.json", "/path/to/dir/main.json" ]
+  paths = [ "*.json", "~/*.json", "/path/to/dir/main.json", "*.yml", "*.yaml" ]
 }
 ```
 
@@ -150,7 +153,10 @@ You can specify a subdirectory after a double-slash (`//`) if you want to downlo
 connection "openapi" {
   plugin = "openapi"
 
-  paths = [ "github.com/OAI/OpenAPI-Specification//examples/v2.0/json//*.json" ]
+  paths = [ 
+    "github.com/OAI/OpenAPI-Specification//examples/v2.0/json//*.json",
+    "github.com/OAI/OpenAPI-Specification//examples/v2.0/yaml//*.yaml"
+  ]
 }
 ```
 
