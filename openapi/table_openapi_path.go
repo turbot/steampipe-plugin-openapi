@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"context"
+	"os"
 	p "path"
 	"strings"
 
@@ -23,7 +24,7 @@ func tableOpenAPIPath(ctx context.Context) *plugin.Table {
 			Hydrate:       listOpenAPIPaths,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
-		Columns: []*plugin.Column{
+		Columns: openAPICommonColumns([]*plugin.Column{
 			{Name: "api_path", Description: "A relative path to an individual endpoint.", Type: proto.ColumnType_STRING},
 			{Name: "method", Description: "Specify the HTTP method.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A verbose explanation of the operation behavior.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Operation.Description")},
@@ -41,7 +42,7 @@ func tableOpenAPIPath(ctx context.Context) *plugin.Table {
 			{Name: "external_docs", Description: "Additional external documentation for this operation.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Operation.ExternalDocs")},
 			{Name: "tags", Description: "A list of tags for API documentation control.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Operation.Tags")},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
-		},
+		}),
 	}
 }
 
@@ -49,6 +50,8 @@ type openAPIPath struct {
 	Path      string
 	ApiPath   string
 	Method    string
+	StartLine int
+	EndLine   int
 	Operation *openapi3.Operation
 }
 
@@ -59,6 +62,13 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
+	// get the start and end lines of the path block
+	file, err := os.Open(path)
+	if err != nil {
+		plugin.Logger(ctx).Error("openapi_path.listOpenAPIPaths", "file_open_error", err)
+		return nil, err
+	}
+
 	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
@@ -68,6 +78,7 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 
 	// For each path, scan its arguments
 	for apiPath, item := range doc.Paths {
+		startLine, endLine := findBlockLines(file, "paths", apiPath)
 		for _, op := range OperationTypes {
 			operation := getOperationInfoByType(op, item)
 
@@ -80,6 +91,8 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 				Path:      path,
 				ApiPath:   p.Join(apiPath, op),
 				Method:    strings.ToUpper(op),
+				StartLine: startLine,
+				EndLine:   endLine,
 				Operation: operation,
 			})
 

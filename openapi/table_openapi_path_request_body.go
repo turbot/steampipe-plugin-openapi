@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"context"
+	"os"
 	p "path"
 	"strings"
 
@@ -22,7 +23,7 @@ func tableOpenAPIPathRequestBody(ctx context.Context) *plugin.Table {
 			Hydrate:       listOpenAPIPathRequestBodies,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
-		Columns: []*plugin.Column{
+		Columns: openAPICommonColumns([]*plugin.Column{
 			{Name: "api_path", Description: "The key of the request body object definition.", Type: proto.ColumnType_STRING},
 			{Name: "api_method", Description: "Specifies the HTTP method.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A description of the request body.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Raw.Description")},
@@ -30,7 +31,7 @@ func tableOpenAPIPathRequestBody(ctx context.Context) *plugin.Table {
 			{Name: "request_body_ref", Description: "The reference to the components request body object.", Type: proto.ColumnType_STRING},
 			{Name: "content", Description: "A map containing descriptions of potential request body payloads.", Type: proto.ColumnType_JSON},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
-		},
+		}),
 	}
 }
 
@@ -39,6 +40,8 @@ type openAPIPathRequestBody struct {
 	ApiPath        string
 	ApiMethod      string
 	RequestBodyRef string
+	StartLine      int
+	EndLine        int
 	Content        []map[string]interface{}
 	Raw            openapi3.RequestBody
 }
@@ -49,6 +52,12 @@ func listOpenAPIPathRequestBodies(ctx context.Context, d *plugin.QueryData, h *p
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
+
+	file, err := os.Open(path)
+	if err != nil {
+		plugin.Logger(ctx).Error("openapi_path_request_body.listOpenAPIPathRequestBodies", "file_open_error", err)
+		return nil, err
+	}
 
 	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
@@ -71,12 +80,14 @@ func listOpenAPIPathRequestBodies(ctx context.Context, d *plugin.QueryData, h *p
 			if operation.RequestBody == nil {
 				continue
 			}
-
+			startLine, endLine := findBlockLines(file, "paths", apiPath, "requestBody")
 			requestBodyObject := openAPIPathRequestBody{
 				Path:           path,
 				ApiPath:        p.Join(apiPath, op),
 				ApiMethod:      strings.ToUpper(op),
 				RequestBodyRef: operation.RequestBody.Ref,
+				StartLine:      startLine,
+				EndLine:        endLine,
 			}
 
 			for header, content := range operation.RequestBody.Value.Content {

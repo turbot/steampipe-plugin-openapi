@@ -1,9 +1,12 @@
 package openapi
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	filehelpers "github.com/turbot/go-kit/files"
@@ -108,4 +111,65 @@ func getDocUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	plugin.Logger(ctx).Debug("getDocUncached", "connection_name", d.Connection.Name, "path", path, "status", "done")
 
 	return doc, nil
+}
+
+func findBlockLines(file *os.File, blockName string, pathName ...string) (int, int) {
+	var currentLine, startLine, endLine int
+	var bracketCounter int
+	inBlock, inPath, inResponseStatus, inRequestBody, inServer := false, false, false, false, false
+
+	file.Seek(0, 0)
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		currentLine++
+		line := scanner.Text()
+		trimmedLine := strings.TrimSpace(line)
+
+		// Detect start of desired block or path or response
+		if (!inBlock && trimmedLine == fmt.Sprintf(`"%s": {`, blockName)) || !inBlock && trimmedLine == fmt.Sprintf(`"%s": [`, blockName) {
+			inBlock = true
+			bracketCounter = 1
+			startLine = currentLine
+			continue
+		} else if inBlock && !inServer && strings.Contains(trimmedLine, fmt.Sprintf(`"url": "%s"`, pathName[0])) {
+			inServer = true
+			bracketCounter = 1
+			startLine = currentLine - 1
+			continue
+		} else if inBlock && blockName == "paths" && !inPath && len(pathName) > 0 && trimmedLine == fmt.Sprintf(`"%s": {`, pathName[0]) {
+			inPath = true
+			bracketCounter = 1
+			startLine = currentLine
+			continue
+		} else if inPath && !inRequestBody && len(pathName) > 1 && pathName[1] == "requestBody" && trimmedLine == `"requestBody": {` {
+			inRequestBody = true
+			bracketCounter = 1
+			startLine = currentLine
+			continue
+		} else if inPath && !inResponseStatus && len(pathName) > 1 && trimmedLine == fmt.Sprintf(`"%s": {`, pathName[1]) {
+			inResponseStatus = true
+			bracketCounter = 1
+			startLine = currentLine
+			continue
+		}
+
+		// If we're in a block/path/responseStatus, track the brackets to find its end
+		if (inBlock && !inServer) || (inBlock && !inPath) || (inPath && !inResponseStatus) || (inPath && !inRequestBody) || inResponseStatus || inRequestBody {
+			bracketCounter += strings.Count(line, "{")
+			bracketCounter -= strings.Count(line, "}")
+
+			if bracketCounter == 0 {
+				endLine = currentLine
+				break
+			}
+		}
+	}
+
+	if startLine != 0 && endLine == 0 {
+		// If the end of the block was not found, reset the start to indicate this block doesn't exist
+		startLine = 0
+	}
+
+	return startLine, endLine
 }

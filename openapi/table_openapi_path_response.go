@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"context"
+	"os"
 	p "path"
 	"strings"
 
@@ -22,7 +23,7 @@ func tableOpenAPIPathResponse(ctx context.Context) *plugin.Table {
 			Hydrate:       listOpenAPIPathResponses,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
-		Columns: []*plugin.Column{
+		Columns: openAPICommonColumns([]*plugin.Column{
 			{Name: "api_path", Description: "The key of the response object definition.", Type: proto.ColumnType_STRING},
 			{Name: "api_method", Description: "Specifies the HTTP method.", Type: proto.ColumnType_STRING},
 			{Name: "response_status", Description: "The key of the response object definition.", Type: proto.ColumnType_STRING},
@@ -32,7 +33,7 @@ func tableOpenAPIPathResponse(ctx context.Context) *plugin.Table {
 			{Name: "links", Description: "A map of operations links that can be followed from the response.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Raw.Links")},
 			{Name: "description", Description: "A description of the response.", Type: proto.ColumnType_STRING},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
-		},
+		}),
 	}
 }
 
@@ -42,6 +43,8 @@ type openAPIPathResponse struct {
 	ApiMethod      string
 	ResponseStatus string
 	ResponseRef    string
+	StartLine      int
+	EndLine        int
 	Content        []map[string]interface{}
 	Description    string
 	Raw            openapi3.Response
@@ -53,6 +56,12 @@ func listOpenAPIPathResponses(ctx context.Context, d *plugin.QueryData, h *plugi
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
+
+	file, err := os.Open(path)
+	if err != nil {
+		plugin.Logger(ctx).Error("openapi_path_response.listOpenAPIPathResponses", "file_open_error", err)
+		return nil, err
+	}
 
 	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
@@ -72,6 +81,7 @@ func listOpenAPIPathResponses(ctx context.Context, d *plugin.QueryData, h *plugi
 			}
 
 			for responseStatus, response := range operation.Responses {
+				startLine, endLine := findBlockLines(file, "paths", apiPath, responseStatus)
 				responseObject := openAPIPathResponse{
 					Path:           path,
 					ApiPath:        p.Join(apiPath, op),
@@ -79,6 +89,8 @@ func listOpenAPIPathResponses(ctx context.Context, d *plugin.QueryData, h *plugi
 					ResponseStatus: responseStatus,
 					Description:    *response.Value.Description,
 					ResponseRef:    response.Ref,
+					StartLine:      startLine,
+					EndLine:        endLine,
 				}
 
 				for header, content := range response.Value.Content {
