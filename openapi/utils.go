@@ -123,7 +123,7 @@ func findBlockLinesFromJSON(file *os.File, blockName string, pathName ...string)
 	inBlock, inPath, inResponseStatus, inRequestBody, inServer, inComponent := false, false, false, false, false, false
 
 	// Move the file pointer to the start of the file.
-	file.Seek(0, 0)
+	_, _ = file.Seek(0, 0)
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -193,7 +193,7 @@ func findBlockLinesFromJSON(file *os.File, blockName string, pathName ...string)
 	return startLine, endLine
 }
 
-// findBlockLinesFromJSON locates the start and end lines of a specific block or nested element within a block.
+// findBlockLinesFromYML locates the start and end lines of a specific block or nested element within a block.
 // The file should contain structured data (e.g., YML/YAML) and this function expects to search for blocks with specific names.
 func findBlockLinesFromYML(file *os.File, blockName string, pathName ...string) (int, int) {
 	var currentLine, startLine, endLine, currentIndentLevel int
@@ -201,7 +201,8 @@ func findBlockLinesFromYML(file *os.File, blockName string, pathName ...string) 
 
 	inBlock, inPath, inServer, inRequestBody, inComponent, inResponseStatus := false, false, false, false, false, false
 
-	file.Seek(0, 0)
+	// Move the file pointer to the start of the file.
+	_, _ = file.Seek(0, 0)
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
