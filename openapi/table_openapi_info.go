@@ -3,6 +3,7 @@ package openapi
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -49,13 +50,19 @@ func listOpenAPIInfo(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	// available by the optional key column
 	path := h.Item.(filePath).Path
 
-	// get the start and end lines of the info block
 	file, err := os.Open(path)
 	if err != nil {
 		plugin.Logger(ctx).Error("openapi_info.listOpenAPIInfo", "file_open_error", err)
 		return nil, err
 	}
-	startLine, endLine := findBlockLines(file, "info", "")
+
+	// fetch start and end line for info
+	var startLine, endLine int
+	if strings.HasSuffix(path, "json") {
+		startLine, endLine = findBlockLinesFromJSON(file, "info", "")
+	} else {
+		startLine, endLine = findBlockLinesFromYML(file, "info", "")
+	}
 
 	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)

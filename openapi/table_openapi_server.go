@@ -3,6 +3,7 @@ package openapi
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -60,7 +61,15 @@ func listOpenAPIServers(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 
 	// For each server, scan its arguments
 	for _, server := range doc.Servers {
-		startLine, endLine := findBlockLines(file, "servers", server.URL)
+
+		// fetch start and end line for each server
+		var startLine, endLine int
+		if strings.HasSuffix(path, "json") {
+			startLine, endLine = findBlockLinesFromJSON(file, "servers", server.URL)
+		} else {
+			startLine, endLine = findBlockLinesFromYML(file, "servers", server.URL)
+		}
+
 		d.StreamListItem(ctx, openAPIServer{path, startLine, endLine, *server})
 
 		// Context may get cancelled due to manual cancellation or if the limit has been reached

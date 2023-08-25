@@ -2,6 +2,8 @@ package openapi
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -20,21 +22,23 @@ func tableOpenAPIComponentRequestBody(ctx context.Context) *plugin.Table {
 			Hydrate:       listOpenAPIComponentRequestBodies,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
-		Columns: []*plugin.Column{
+		Columns: openAPICommonColumns([]*plugin.Column{
 			{Name: "key", Description: "The key used to refer or search the request body.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A brief description of the request body.", Type: proto.ColumnType_STRING},
 			{Name: "required", Description: "True, if the request body is required.", Type: proto.ColumnType_BOOL},
 			{Name: "content", Description: "The content of the request body.", Type: proto.ColumnType_JSON},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
-		},
+		}),
 	}
 }
 
 type openAPIComponentRequestBody struct {
-	Path    string
-	Key     string
-	Content []map[string]interface{}
-	Raw     openapi3.RequestBody
+	Path      string
+	Key       string
+	StartLine int
+	EndLine   int
+	Content   []map[string]interface{}
+	Raw       openapi3.RequestBody
 }
 
 //// LIST FUNCTION
@@ -43,6 +47,12 @@ func listOpenAPIComponentRequestBodies(ctx context.Context, d *plugin.QueryData,
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
+
+	file, err := os.Open(path)
+	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_request_body.listOpenAPIComponentRequestBodies", "file_open_error", err)
+		return nil, err
+	}
 
 	doc, err := getDoc(ctx, d, path)
 	if err != nil {
@@ -57,9 +67,20 @@ func listOpenAPIComponentRequestBodies(ctx context.Context, d *plugin.QueryData,
 
 	// For each request body, scan its arguments
 	for k, v := range doc.Components.RequestBodies {
+
+		// fetch start and end line for each requestBody
+		var startLine, endLine int
+		if strings.HasSuffix(path, "json") {
+			startLine, endLine = findBlockLinesFromJSON(file, "components", k)
+		} else {
+			startLine, endLine = findBlockLinesFromYML(file, "components", k)
+		}
+
 		requestBodyObject := openAPIComponentRequestBody{
-			Path: path,
-			Key:  k,
+			Path:      path,
+			Key:       k,
+			StartLine: startLine,
+			EndLine:   endLine,
 		}
 
 		for header, content := range v.Value.Content {

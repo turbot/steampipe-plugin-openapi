@@ -2,6 +2,8 @@ package openapi
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -21,7 +23,7 @@ func tableOpenAPIComponentHeader(ctx context.Context) *plugin.Table {
 			Hydrate:       listOpenAPIComponentHeaders,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
-		Columns: []*plugin.Column{
+		Columns: openAPICommonColumns([]*plugin.Column{
 			{Name: "key", Description: "The key used to refer or search the header.", Type: proto.ColumnType_STRING},
 			{Name: "name", Description: "The name of the header.", Type: proto.ColumnType_STRING},
 			{Name: "location", Description: "The location of the header. Possible values are query, header, path or cookie.", Type: proto.ColumnType_STRING, Transform: transform.FromField("In").NullIfZero()},
@@ -35,13 +37,15 @@ func tableOpenAPIComponentHeader(ctx context.Context) *plugin.Table {
 			{Name: "schema", Description: "The schema of the header.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Schema.Value")},
 			{Name: "schema_ref", Description: "The schema reference of the header.", Type: proto.ColumnType_STRING, Transform: transform.FromField("Schema.Ref").Transform(transform.NullIfZeroValue)},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
-		},
+		}),
 	}
 }
 
 type openAPIComponentHeader struct {
-	Path string
-	Key  string
+	Path      string
+	Key       string
+	StartLine int
+	EndLine   int
 	openapi3.Header
 }
 
@@ -51,6 +55,12 @@ func listOpenAPIComponentHeaders(ctx context.Context, d *plugin.QueryData, h *pl
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
+
+	file, err := os.Open(path)
+	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_header.listOpenAPIComponentHeaders", "file_open_error", err)
+		return nil, err
+	}
 
 	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
@@ -66,7 +76,16 @@ func listOpenAPIComponentHeaders(ctx context.Context, d *plugin.QueryData, h *pl
 
 	// For each header, scan its arguments
 	for k, v := range doc.Components.Headers {
-		d.StreamListItem(ctx, openAPIComponentHeader{path, k, *v.Value})
+
+		// fetch start and end line for each header
+		var startLine, endLine int
+		if strings.HasSuffix(path, "json") {
+			startLine, endLine = findBlockLinesFromJSON(file, "components", k)
+		} else {
+			startLine, endLine = findBlockLinesFromYML(file, "components", k)
+		}
+
+		d.StreamListItem(ctx, openAPIComponentHeader{path, k, startLine, endLine, *v.Value})
 
 		// Context may get cancelled due to manual cancellation or if the limit has been reached
 		if d.RowsRemaining(ctx) == 0 {

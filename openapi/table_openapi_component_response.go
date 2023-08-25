@@ -2,6 +2,8 @@ package openapi
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -20,14 +22,14 @@ func tableOpenAPIComponentResponse(ctx context.Context) *plugin.Table {
 			Hydrate:       listOpenAPIComponentResponses,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
-		Columns: []*plugin.Column{
+		Columns: openAPICommonColumns([]*plugin.Column{
 			{Name: "key", Description: "The key of the response object definition.", Type: proto.ColumnType_STRING},
 			{Name: "description", Description: "A description of the response.", Type: proto.ColumnType_STRING},
 			{Name: "content", Description: "A map containing descriptions of potential response payloads.", Type: proto.ColumnType_JSON},
 			{Name: "headers", Description: "Maps a header name to its definition.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Raw.Headers")},
 			{Name: "links", Description: "A map of operations links that can be followed from the response.", Type: proto.ColumnType_JSON, Transform: transform.FromField("Raw.Links")},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
-		},
+		}),
 	}
 }
 
@@ -36,6 +38,8 @@ type openAPIComponentResponse struct {
 	Content     []map[string]interface{}
 	Key         string
 	Description string
+	StartLine   int
+	EndLine     int
 	Raw         openapi3.Response
 }
 
@@ -45,6 +49,12 @@ func listOpenAPIComponentResponses(ctx context.Context, d *plugin.QueryData, h *
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
+
+	file, err := os.Open(path)
+	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_response.listOpenAPIComponentResponses", "file_open_error", err)
+		return nil, err
+	}
 
 	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
@@ -60,10 +70,21 @@ func listOpenAPIComponentResponses(ctx context.Context, d *plugin.QueryData, h *
 
 	// For each response, scan its arguments
 	for k, v := range doc.Components.Responses {
+
+		// fetch start and end line for each response
+		var startLine, endLine int
+		if strings.HasSuffix(path, "json") {
+			startLine, endLine = findBlockLinesFromJSON(file, "components", k)
+		} else {
+			startLine, endLine = findBlockLinesFromYML(file, "components", k)
+		}
+
 		responseObject := openAPIComponentResponse{
 			Path:        path,
 			Key:         k,
 			Description: *v.Value.Description,
+			StartLine:   startLine,
+			EndLine:     endLine,
 		}
 
 		for header, content := range v.Value.Content {

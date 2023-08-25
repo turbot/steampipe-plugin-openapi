@@ -78,7 +78,15 @@ func listOpenAPIPaths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 
 	// For each path, scan its arguments
 	for apiPath, item := range doc.Paths {
-		startLine, endLine := findBlockLines(file, "paths", apiPath)
+
+		// fetch start and end line for each path
+		var startLine, endLine int
+		if strings.HasSuffix(path, "json") {
+			startLine, endLine = findBlockLinesFromJSON(file, "paths", apiPath)
+		} else {
+			startLine, endLine = findBlockLinesFromYML(file, "paths", apiPath)
+		}
+
 		for _, op := range OperationTypes {
 			operation := getOperationInfoByType(op, item)
 

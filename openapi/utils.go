@@ -113,11 +113,16 @@ func getDocUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	return doc, nil
 }
 
-func findBlockLines(file *os.File, blockName string, pathName ...string) (int, int) {
+// findBlockLinesFromJSON locates the start and end lines of a specific block or nested element within a block.
+// The file should contain structured data (e.g., JSON) and this function expects to search for blocks with specific names.
+func findBlockLinesFromJSON(file *os.File, blockName string, pathName ...string) (int, int) {
 	var currentLine, startLine, endLine int
 	var bracketCounter int
-	inBlock, inPath, inResponseStatus, inRequestBody, inServer := false, false, false, false, false
 
+	// These boolean flags indicate which part of the structured data we're currently processing.
+	inBlock, inPath, inResponseStatus, inRequestBody, inServer, inComponent := false, false, false, false, false, false
+
+	// Move the file pointer to the start of the file.
 	file.Seek(0, 0)
 	scanner := bufio.NewScanner(file)
 
@@ -126,36 +131,50 @@ func findBlockLines(file *os.File, blockName string, pathName ...string) (int, i
 		line := scanner.Text()
 		trimmedLine := strings.TrimSpace(line)
 
-		// Detect start of desired block or path or response
-		if (!inBlock && trimmedLine == fmt.Sprintf(`"%s": {`, blockName)) || !inBlock && trimmedLine == fmt.Sprintf(`"%s": [`, blockName) {
+		// Detect the start of the desired block, path, response, etc.
+		// Depending on the blockName and provided pathName, different conditions are checked.
+
+		// Generic block detection
+		if !inBlock && ((trimmedLine == fmt.Sprintf(`"%s": {`, blockName) || trimmedLine == fmt.Sprintf(`"%s": [`, blockName)) || trimmedLine == fmt.Sprintf(`%s:`, blockName)) {
 			inBlock = true
 			bracketCounter = 1
 			startLine = currentLine
 			continue
-		} else if inBlock && !inServer && strings.Contains(trimmedLine, fmt.Sprintf(`"url": "%s"`, pathName[0])) {
+		} else if inBlock && blockName == "components" && trimmedLine == fmt.Sprintf(`"%s": {`, pathName[0]) {
+			// Different component block detection within the "components" block
+			inComponent = true
+			bracketCounter = 1
+			startLine = currentLine
+			continue
+		} else if inBlock && blockName == "servers" && strings.Contains(trimmedLine, fmt.Sprintf(`"url": "%s"`, pathName[0])) {
+			// Server detection within the "servers" block
 			inServer = true
 			bracketCounter = 1
 			startLine = currentLine - 1
 			continue
-		} else if inBlock && blockName == "paths" && !inPath && len(pathName) > 0 && trimmedLine == fmt.Sprintf(`"%s": {`, pathName[0]) {
+		} else if inBlock && blockName == "paths" && len(pathName) > 0 && trimmedLine == fmt.Sprintf(`"%s": {`, pathName[0]) {
+			// Path detection within the "paths" block
 			inPath = true
 			bracketCounter = 1
 			startLine = currentLine
 			continue
-		} else if inPath && !inRequestBody && len(pathName) > 1 && pathName[1] == "requestBody" && trimmedLine == `"requestBody": {` {
+		} else if inPath && len(pathName) > 1 && pathName[1] == "requestBody" && trimmedLine == `"requestBody": {` {
+			// Request body detection within a path
 			inRequestBody = true
 			bracketCounter = 1
 			startLine = currentLine
 			continue
-		} else if inPath && !inResponseStatus && len(pathName) > 1 && trimmedLine == fmt.Sprintf(`"%s": {`, pathName[1]) {
+		} else if inPath && len(pathName) > 1 && trimmedLine == fmt.Sprintf(`"%s": {`, pathName[1]) {
+			// Response status detection within a path
 			inResponseStatus = true
 			bracketCounter = 1
 			startLine = currentLine
 			continue
 		}
 
-		// If we're in a block/path/responseStatus, track the brackets to find its end
-		if (inBlock && !inServer) || (inBlock && !inPath) || (inPath && !inResponseStatus) || (inPath && !inRequestBody) || inResponseStatus || inRequestBody {
+		// If we are within a block, we need to track the opening and closing brackets
+		// to determine where the block ends.
+		if (inBlock && !inServer) || (inBlock && !inComponent) || (inBlock && !inPath) || (inPath && !inResponseStatus) || (inPath && !inRequestBody) {
 			bracketCounter += strings.Count(line, "{")
 			bracketCounter -= strings.Count(line, "}")
 
@@ -167,8 +186,88 @@ func findBlockLines(file *os.File, blockName string, pathName ...string) (int, i
 	}
 
 	if startLine != 0 && endLine == 0 {
-		// If the end of the block was not found, reset the start to indicate this block doesn't exist
+		// If we found the start but not the end, reset the start to indicate the block doesn't exist in entirety.
 		startLine = 0
+	}
+
+	return startLine, endLine
+}
+
+// findBlockLinesFromJSON locates the start and end lines of a specific block or nested element within a block.
+// The file should contain structured data (e.g., YML/YAML) and this function expects to search for blocks with specific names.
+func findBlockLinesFromYML(file *os.File, blockName string, pathName ...string) (int, int) {
+	var currentLine, startLine, endLine, currentIndentLevel int
+	var blockIndentLevel, pathIndentLevel, serverIndentLevel, requestBodyIndentLevel, componentIndentLevel, responseIndentLevel = -1, -1, -1, -1, -1, -1
+
+	inBlock, inPath, inServer, inRequestBody, inComponent, inResponseStatus := false, false, false, false, false, false
+
+	file.Seek(0, 0)
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		currentLine++
+		line := scanner.Text()
+
+		// Determine the current indentation level by counting leading spaces.
+		currentIndentLevel = len(line) - len(strings.TrimSpace(line))
+
+		// Detect the start of the desired block.
+		if !inBlock && strings.HasPrefix(strings.TrimSpace(line), blockName+":") {
+			inBlock = true
+			startLine = currentLine
+			blockIndentLevel = currentIndentLevel
+			continue
+		} else if inBlock && blockName == "components" && len(pathName) > 0 && strings.HasPrefix(strings.TrimSpace(line), fmt.Sprintf("%s:", pathName[0])) {
+			inComponent = true
+			startLine = currentLine
+			componentIndentLevel = currentIndentLevel
+			continue
+		} else if inBlock && blockName == "paths" && len(pathName) > 0 && strings.HasPrefix(strings.TrimSpace(line), fmt.Sprintf("%s:", pathName[0])) {
+			inPath = true
+			startLine = currentLine
+			pathIndentLevel = currentIndentLevel
+			continue
+		} else if inPath && len(pathName) > 1 && pathName[1] == "requestBody" && strings.HasPrefix(strings.TrimSpace(line), "requestBody:") {
+			inRequestBody = true
+			startLine = currentLine
+			requestBodyIndentLevel = currentIndentLevel
+			continue
+		} else if inPath && len(pathName) > 1 && strings.HasPrefix(strings.TrimSpace(line), fmt.Sprintf(`"%s":`, pathName[1])) {
+			inResponseStatus = true
+			startLine = currentLine
+			responseIndentLevel = currentIndentLevel
+			continue
+		} else if inBlock && blockName == "servers" && len(pathName) > 0 && strings.Contains(strings.TrimSpace(line), fmt.Sprintf(`url: "%s"`, pathName[0])) {
+			inServer = true
+			startLine = currentLine
+			serverIndentLevel = currentIndentLevel
+			continue
+		}
+
+		// // If we are within a block, we need to track the closing
+		if inComponent && currentIndentLevel <= componentIndentLevel {
+			endLine = currentLine - 1
+			break
+		} else if inPath && currentIndentLevel <= pathIndentLevel {
+			endLine = currentLine - 1
+			break
+		} else if inServer && currentIndentLevel <= serverIndentLevel {
+			endLine = currentLine - 1
+			break
+		} else if inRequestBody && currentIndentLevel <= requestBodyIndentLevel {
+			endLine = currentLine - 1
+			break
+		} else if inResponseStatus && currentIndentLevel <= responseIndentLevel {
+			endLine = currentLine - 1
+			break
+		} else if inBlock && currentIndentLevel <= blockIndentLevel {
+			endLine = currentLine - 1
+			break
+		}
+	}
+
+	if startLine != 0 && endLine == 0 {
+		endLine = currentLine // Consider the end of the file as the end of the block or path
 	}
 
 	return startLine, endLine

@@ -2,6 +2,8 @@ package openapi
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -21,7 +23,7 @@ func tableOpenAPIComponentSchema(ctx context.Context) *plugin.Table {
 			Hydrate:       listOpenAPIComponentSchemas,
 			KeyColumns:    plugin.OptionalColumns([]string{"path"}),
 		},
-		Columns: []*plugin.Column{
+		Columns: openAPICommonColumns([]*plugin.Column{
 			{Name: "name", Description: "The name of the property.", Type: proto.ColumnType_STRING},
 			{Name: "type", Description: "The type of the schema.", Type: proto.ColumnType_STRING},
 			{Name: "format", Description: "The format of a specific schema type.", Type: proto.ColumnType_STRING},
@@ -57,13 +59,15 @@ func tableOpenAPIComponentSchema(ctx context.Context) *plugin.Table {
 			{Name: "required", Description: "If true, the property must be defined.", Type: proto.ColumnType_JSON},
 			{Name: "properties", Description: "Describes the schema properties.", Type: proto.ColumnType_JSON},
 			{Name: "path", Description: "Path to the file.", Type: proto.ColumnType_STRING},
-		},
+		}),
 	}
 }
 
 type openAPIComponentSchema struct {
-	Path string
-	Name string
+	Path      string
+	Name      string
+	StartLine int
+	EndLine   int
 	openapi3.Schema
 	Properties map[string]interface{}
 }
@@ -74,6 +78,12 @@ func listOpenAPIComponentSchemas(ctx context.Context, d *plugin.QueryData, h *pl
 	// The path comes from a parent hydrate, defaulting to the config paths or
 	// available by the optional key column
 	path := h.Item.(filePath).Path
+
+	file, err := os.Open(path)
+	if err != nil {
+		plugin.Logger(ctx).Error("openapi_component_schema.listOpenAPIComponentSchemas", "file_open_error", err)
+		return nil, err
+	}
 
 	// Get the parsed contents
 	doc, err := getDoc(ctx, d, path)
@@ -89,11 +99,20 @@ func listOpenAPIComponentSchemas(ctx context.Context, d *plugin.QueryData, h *pl
 
 	// For each schema, scan its arguments
 	for k, v := range doc.Components.Schemas {
+
+		// fetch start and end line for each schemas
+		var startLine, endLine int
+		if strings.HasSuffix(path, "json") {
+			startLine, endLine = findBlockLinesFromJSON(file, "components", k)
+		} else {
+			startLine, endLine = findBlockLinesFromYML(file, "components", k)
+		}
+
 		properties := map[string]interface{}{}
 		for i, j := range v.Value.Properties {
 			properties[i] = j.Value
 		}
-		d.StreamListItem(ctx, openAPIComponentSchema{path, k, *v.Value, properties})
+		d.StreamListItem(ctx, openAPIComponentSchema{path, k, startLine, endLine, *v.Value, properties})
 
 		// Context may get cancelled due to manual cancellation or if the limit has been reached
 		if d.RowsRemaining(ctx) == 0 {

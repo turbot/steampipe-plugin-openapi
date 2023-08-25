@@ -81,7 +81,15 @@ func listOpenAPIPathResponses(ctx context.Context, d *plugin.QueryData, h *plugi
 			}
 
 			for responseStatus, response := range operation.Responses {
-				startLine, endLine := findBlockLines(file, "paths", apiPath, responseStatus)
+
+				// fetch start and end line for each response block present in path
+				var startLine, endLine int
+				if strings.HasSuffix(path, "json") {
+					startLine, endLine = findBlockLinesFromJSON(file, "paths", apiPath, responseStatus)
+				} else {
+					startLine, endLine = findBlockLinesFromYML(file, "paths", apiPath, responseStatus)
+				}
+
 				responseObject := openAPIPathResponse{
 					Path:           path,
 					ApiPath:        p.Join(apiPath, op),

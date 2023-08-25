@@ -80,7 +80,15 @@ func listOpenAPIPathRequestBodies(ctx context.Context, d *plugin.QueryData, h *p
 			if operation.RequestBody == nil {
 				continue
 			}
-			startLine, endLine := findBlockLines(file, "paths", apiPath, "requestBody")
+
+			// fetch start and end line for each requestBody block present in path
+			var startLine, endLine int
+			if strings.HasSuffix(path, "json") {
+				startLine, endLine = findBlockLinesFromJSON(file, "paths", apiPath, "requestBody")
+			} else {
+				startLine, endLine = findBlockLinesFromYML(file, "paths", apiPath, "requestBody")
+			}
+
 			requestBodyObject := openAPIPathRequestBody{
 				Path:           path,
 				ApiPath:        p.Join(apiPath, op),
