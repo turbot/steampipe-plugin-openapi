@@ -15,7 +15,9 @@ select
   location,
   description,
   scheme,
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_component_security_scheme;
 ```

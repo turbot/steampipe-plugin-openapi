@@ -16,7 +16,9 @@ select
   deprecated,
   description,
   default_value,
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_component_schema;
 ```

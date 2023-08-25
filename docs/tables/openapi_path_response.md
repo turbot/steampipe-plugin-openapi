@@ -14,7 +14,9 @@ select
   api_method,
   response_status,
   jsonb_pretty(content),
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_path_response;
 ```

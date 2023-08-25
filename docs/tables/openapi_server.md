@@ -11,7 +11,9 @@ select
   url as base_url,
   description,
   variables,
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_server;
 ```

@@ -15,7 +15,9 @@ select
   description,
   required,
   jsonb_pretty(content),
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_path_request_body;
 ```

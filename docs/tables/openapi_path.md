@@ -14,7 +14,9 @@ select
   deprecated,
   description,
   tags,
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_path;
 ```

@@ -13,7 +13,9 @@ select
   key,
   description,
   required,
-  jsonb_pretty(content)
+  jsonb_pretty(content),
+  start_line,
+  end_line
 from
   openapi_component_request_body;
 ```

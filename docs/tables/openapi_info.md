@@ -12,7 +12,9 @@ select
   description,
   version,
   contact,
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_info;
 ```

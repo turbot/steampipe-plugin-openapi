@@ -14,7 +14,9 @@ select
   name,
   location,
   description,
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_component_header;
 ```

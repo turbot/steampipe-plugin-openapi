@@ -13,7 +13,9 @@ select
   key,
   description,
   jsonb_pretty(content),
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_component_response;
 ```

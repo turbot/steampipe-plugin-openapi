@@ -16,7 +16,9 @@ select
   deprecated,
   required,
   schema,
-  path
+  path,
+  start_line,
+  end_line
 from
   openapi_component_parameter;
 ```

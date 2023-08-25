@@ -14,7 +14,7 @@ func openAPICommonColumns(columns []*plugin.Column) []*plugin.Column {
 
 func definitionResourceColumns() []*plugin.Column {
 	return []*plugin.Column{
-		{Name: "start_line", Type: proto.ColumnType_INT, Description: "The path to the definition file.", Transform: transform.FromField("StartLine").NullIfZero()},
-		{Name: "end_line", Type: proto.ColumnType_INT, Description: "The path to the definition file.", Transform: transform.FromField("EndLine").NullIfZero()},
+		{Name: "start_line", Type: proto.ColumnType_INT, Description: "The start line of the block.", Transform: transform.FromField("StartLine").NullIfZero()},
+		{Name: "end_line", Type: proto.ColumnType_INT, Description: "The end line of the block.", Transform: transform.FromField("EndLine").NullIfZero()},
 	}
 }
