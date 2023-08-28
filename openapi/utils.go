@@ -268,7 +268,8 @@ func findBlockLinesFromYML(file *os.File, blockName string, pathName ...string) 
 	}
 
 	if startLine != 0 && endLine == 0 {
-		endLine = currentLine // Consider the end of the file as the end of the block or path
+		// If we found the start but not the end, reset the start to indicate the block doesn't exist in entirety.
+		startLine = 0
 	}
 
 	return startLine, endLine
