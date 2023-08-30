@@ -81,16 +81,24 @@ func listOpenAPIPathRequestBodies(ctx context.Context, d *plugin.QueryData, h *p
 
 			for header, content := range operation.RequestBody.Value.Content {
 				var schema interface{}
-				if content.Schema.Ref != "" {
-					schema = content.Schema.Ref
-				} else {
-					schema = content.Schema
+				var schemaType string
+
+				// Check if content.Schema and content.Schema.Value is not nil
+				if content.Schema != nil {
+					if content.Schema.Ref != "" {
+						schema = content.Schema.Ref
+					} else {
+						schema = content.Schema
+					}
+					if content.Schema.Value != nil {
+						schemaType = content.Schema.Value.Type
+					}
 				}
 				requestBodyObject.Content = append(requestBodyObject.Content, map[string]interface{}{
 					"contentType": header,
 					"examples":    content.Examples,
 					"schema":      schema,
-					"schemaType":  content.Schema.Value.Type,
+					"schemaType":  schemaType,
 					"encoding":    content.Encoding,
 				})
 				requestBodyObject.Raw = *operation.RequestBody.Value
