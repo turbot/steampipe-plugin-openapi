@@ -72,30 +72,48 @@ func listOpenAPIPathResponses(ctx context.Context, d *plugin.QueryData, h *plugi
 			}
 
 			for responseStatus, response := range operation.Responses {
+				var description string
+				var responseValue openapi3.Response
+
+				// Check if response.Value and response.Value.Description is not nil
+				if response.Value != nil {
+					responseValue = *response.Value
+					if response.Value.Description != nil {
+						description = *response.Value.Description
+					}
+				}
 				responseObject := openAPIPathResponse{
 					Path:           path,
 					ApiPath:        p.Join(apiPath, op),
 					ApiMethod:      strings.ToUpper(op),
 					ResponseStatus: responseStatus,
-					Description:    *response.Value.Description,
+					Description:    description,
 					ResponseRef:    response.Ref,
 				}
 
 				for header, content := range response.Value.Content {
 					var schema interface{}
-					if content.Schema.Ref != "" {
-						schema = content.Schema.Ref
-					} else {
-						schema = content.Schema
+					var schemaType string
+
+					// Check if content.Schema and content.Schema.Value is not nil
+					if content.Schema != nil {
+						if content.Schema.Ref != "" {
+							schema = content.Schema.Ref
+						} else {
+							schema = content.Schema
+						}
+						if content.Schema.Value != nil {
+							schemaType = content.Schema.Value.Type
+						}
 					}
 					responseObject.Content = append(responseObject.Content, map[string]interface{}{
 						"contentType": header,
 						"examples":    content.Examples,
 						"schema":      schema,
-						"schemaType":  content.Schema.Value.Type,
+						"schemaType":  schemaType,
 					})
 				}
-				responseObject.Raw = *response.Value
+				responseObject.Raw = responseValue
 
 				d.StreamListItem(ctx, responseObject)
 
