@@ -136,8 +136,7 @@ func listOpenAPIV2Paths(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	}
 
 	// check if the doc is swagger 2.0
-	swagger := doc.Swagger
-	if !strings.Contains(swagger, "2.0") {
+	if doc.Swagger != "2.0" {
 		return nil, nil
 	}
 

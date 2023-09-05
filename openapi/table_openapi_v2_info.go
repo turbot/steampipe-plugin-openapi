@@ -2,7 +2,6 @@ package openapi
 
 import (
 	"context"
-	"strings"
 
 	"github.com/go-openapi/spec"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -61,6 +60,11 @@ func tableOpenAPIV2Info(ctx context.Context) *plugin.Table {
 				Description: "Path to the file.",
 				Type:        proto.ColumnType_STRING,
 			},
+			{
+				Name:        "global_schemes",
+				Description: "The global schemes.",
+				Type:        proto.ColumnType_JSON,
+			},
 		},
 	}
 }
@@ -68,6 +72,7 @@ func tableOpenAPIV2Info(ctx context.Context) *plugin.Table {
 type openAPIV2Info struct {
 	Path                 string
 	SpecificationVersion string
+	GlobalSchemes        []string
 	spec.Info
 }
 
@@ -86,12 +91,11 @@ func listOpenAPIV2Info(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	}
 
 	// check if the doc is swagger 2.0
-	swagger := doc.Swagger
-	if !strings.Contains(swagger, "2.0") {
+	if doc.Swagger != "2.0" {
 		return nil, nil
 	}
 
-	d.StreamListItem(ctx, openAPIV2Info{path, doc.Swagger, *doc.Info})
+	d.StreamListItem(ctx, openAPIV2Info{path, doc.Swagger, doc.Schemes, *doc.Info})
 
 	// Context may get cancelled due to manual cancellation or if the limit has been reached
 	if d.RowsRemaining(ctx) == 0 {

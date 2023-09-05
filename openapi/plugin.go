@@ -33,6 +33,10 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"openapi_v2_path":                   tableOpenAPIV2Path(ctx),
 			"openapi_v2_definition":             tableOpenAPIV2Definition(ctx),
 			"openapi_v2_info":                   tableOpenAPIV2Info(ctx),
+			"openapi_v2_security_definition":    tableOpenAPIV2SecurityDefinition(ctx),
+			"openapi_v2_parameter":              tableOpenAPIV2Parameter(ctx),
+			"openapi_v2_response":               tableOpenAPIV2Response(ctx),
+			"openapi_v2_path_response":          tableOpenAPIV2PathResponse(ctx),
 		},
 	}
 

@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/go-openapi/loads"
+	"github.com/go-openapi/spec"
 	filehelpers "github.com/turbot/go-kit/files"
 	"github.com/turbot/steampipe-plugin-sdk/v5/memoize"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -108,4 +110,51 @@ func getDocUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	plugin.Logger(ctx).Debug("getDocUncached", "connection_name", d.Connection.Name, "path", path, "status", "done")
 
 	return doc, nil
+}
+
+// getV2Doc returns the parsed contents of the specified file
+func getV2Doc(ctx context.Context, d *plugin.QueryData, path string) (*spec.Swagger, error) {
+	// Create custom hydrate data to pass through the path. Hydrate data
+	// is normally per-column, but we can hijack it for this case to pass
+	// through the context we need.
+	h := &plugin.HydrateData{Item: path}
+	i, err := getV2DocCached(ctx, d, h)
+	if err != nil {
+		return nil, err
+	}
+
+	return i.(*spec.Swagger), nil
+}
+
+// Cached form of getDoc, using the per-connection and parallel safe
+// Memoize() method.
+var getV2DocCached = plugin.HydrateFunc(getV2DocUncached).Memoize(memoize.WithCacheKeyFunction(getV2DocCacheKey))
+
+// getDoc is per-path, but Memoize() is per-connection, so a setup
+// a custom cache key with path information in it.
+func getV2DocCacheKey(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Extract the path from the hydrate data. This is not per-row data,
+	// but a clever pass through of context for our case.
+	path := h.Item.(string)
+	key := fmt.Sprintf("getV2Doc-%s", path)
+	return key, nil
+}
+
+// getV2DocUncached is the actual implementation of getDoc, which should
+// be run only once per path per connection. Do not call this directly, use
+// getDoc instead.
+func getV2DocUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Extract the path from the hydrate data. This is not per-row data,
+	// but a clever pass through of context for our case.
+	path := h.Item.(string)
+
+	doc, err := loads.Spec(path)
+	if err != nil {
+		plugin.Logger(ctx).Error("getV2DocUncached", "file_error", err, "path", path)
+		return nil, fmt.Errorf("failed to load file %s: %v", path, err)
+	}
+
+	plugin.Logger(ctx).Debug("getV2DocUncached", "connection_name", d.Connection.Name, "path", path, "status", "done")
+
+	return doc.Spec(), nil
 }
