@@ -16,7 +16,20 @@ The `openapi_component_schema` table provides insights into the OpenAPI Componen
 ### Basic info
 Explore the basic elements of an OpenAPI component schema to understand its structure and contents. This can help determine which components might be deprecated or have default values, aiding in the maintenance and updating of the schema.
 
-```sql
+```sql+postgres
+select
+  name,
+  type,
+  format,
+  deprecated,
+  description,
+  default_value,
+  path
+from
+  openapi_component_schema;
+```
+
+```sql+sqlite
 select
   name,
   type,
@@ -32,7 +45,7 @@ from
 ### Get the properties returned by a specific API on success
 Determine the details and structure of successful responses from a specific API endpoint. This can be useful for understanding what data is returned upon successful API calls, which can aid in further API integration and data management.
 
-```sql
+```sql+postgres
 with get_schema_ref as (
   select
     api_path,
@@ -56,10 +69,34 @@ from
   join openapi_component_schema as s on r.schema_ref = concat('#/components/schemas/', s.name);
 ```
 
+```sql+sqlite
+with get_schema_ref as (
+  select
+    api_path,
+    r.key as response_status,
+    json_extract(r.value, '$.content.application/json.schema.$ref') as schema_ref
+  from
+    openapi_path,
+    json_each(responses) as r
+  where
+    api_path = '/repos/{owner}/{repo}/issues/post'
+    and r.key >= '201' and r.key < 300
+)
+select
+  r.api_path,
+  s.name,
+  s.properties as schema_property,
+  s.required,
+  s.description
+from
+  get_schema_ref as r
+  join openapi_component_schema as s on r.schema_ref = '#/components/schemas/' || s.name;
+```
+
 ### Get the schema of a required parameter of a specific API
 This example helps you understand the structure of a specific API's required parameter. It's useful when you need to know what information is necessary to successfully use or interact with a particular API.
 
-```sql
+```sql+postgres
 select
   op.api_path,
   cp.required,
@@ -68,6 +105,20 @@ from
   openapi_path as op,
   jsonb_array_elements(op.parameters) as p
   join openapi_component_parameter as cp on (p ->> '$ref') = concat('#/components/parameters/', cp.name)
+where
+  op.api_path = '/orgs/{org}/members/{username}/delete'
+  and cp.required;
+```
+
+```sql+sqlite
+select
+  op.api_path,
+  cp.required,
+  cp.schema
+from
+  openapi_path as op,
+  json_each(op.parameters) as p
+  join openapi_component_parameter as cp on json_extract(p.value, '$.$ref') = '#/components/parameters/' || cp.name
 where
   op.api_path = '/orgs/{org}/members/{username}/delete'
   and cp.required;

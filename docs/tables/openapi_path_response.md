@@ -16,7 +16,7 @@ The `openapi_path_response` table provides insights into the responses returned 
 ### Basic info
 Explore the status of responses from various API paths and methods. This can help in identifying any irregularities or issues in the API's responses, improving overall system monitoring and troubleshooting.
 
-```sql
+```sql+postgres
 select
   api_path,
   api_method,
@@ -27,10 +27,21 @@ from
   openapi_path_response;
 ```
 
+```sql+sqlite
+select
+  api_path,
+  api_method,
+  response_status,
+  content,
+  path
+from
+  openapi_path_response;
+```
+
 ### Get the response object for a specific API operation on success
 Determine the success status of a specific API operation by analyzing the response object. This is useful for troubleshooting and optimizing API calls to ensure they are functioning as expected.
 
-```sql
+```sql+postgres
 select
   api_path,
   api_method,
@@ -44,10 +55,24 @@ where
   and response_status = '200';
 ```
 
+```sql+sqlite
+select
+  api_path,
+  api_method,
+  response_status,
+  content,
+  path
+from
+  openapi_path_response
+where
+  api_path = '/app/installations/get'
+  and response_status = '200';
+```
+
 ### List response definitions without schema
 Explore which paths in the OpenAPI path response lack a defined schema. This is useful in identifying areas of your API that may need further definition or refinement.
 
-```sql
+```sql+postgres
 select
   path,
   concat(api_path, '.responses.', response_status, '.content.', c ->> 'contentType') as paths
@@ -56,5 +81,17 @@ from
   jsonb_array_elements(content) as c
 where
   c ->> 'schema' is null
+  and response_ref is null;
+```
+
+```sql+sqlite
+select
+  path,
+  api_path || '.responses.' || response_status || '.content.' || json_extract(c.value, '$.contentType') as paths
+from
+  openapi_path_response,
+  json_each(content) as c
+where
+  json_extract(c.value, '$.schema') is null
   and response_ref is null;
 ```

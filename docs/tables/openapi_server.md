@@ -16,7 +16,17 @@ The `openapi_server` table provides insights into API servers defined in the Ope
 ### Basic info
 Explore the basic information of an OpenAPI server, including its base URL, description, and variables. This can be helpful in understanding the server's configuration and identifying any potential issues.
 
-```sql
+```sql+postgres
+select
+  url as base_url,
+  description,
+  variables,
+  path
+from
+  openapi_server;
+```
+
+```sql+sqlite
 select
   url as base_url,
   description,
@@ -29,10 +39,19 @@ from
 ### Get the variables used for substitution in the server's URL
 Explore which variables are used to modify the server's URL, allowing you to understand how different servers are set up and configured. This is useful for determining the flexibility and customization of your server URLs.
 
-```sql
+```sql+postgres
 select
   url as base_url,
   jsonb_pretty(variables) as variables,
+  path
+from
+  openapi_server;
+```
+
+```sql+sqlite
+select
+  url as base_url,
+  variables,
   path
 from
   openapi_server;

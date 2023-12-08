@@ -16,7 +16,19 @@ The `openapi_component_security_scheme` table provides insights into the securit
 ### Basic info
 Explore the configuration details of security schemes in your OpenAPI components to understand their location, type, and purpose. This can help assess the elements within your API security design and ensure they are properly implemented.
 
-```sql
+```sql+postgres
+select
+  name,
+  type,
+  location,
+  description,
+  scheme,
+  path
+from
+  openapi_component_security_scheme;
+```
+
+```sql+sqlite
 select
   name,
   type,
@@ -31,7 +43,20 @@ from
 ### List OpenAPI specs with no security scheme defined
 Discover the segments of your OpenAPI specifications that lack defined security schemes. This is useful for identifying potential vulnerabilities and ensuring all parts of your API are secure.
 
-```sql
+```sql+postgres
+select
+  i.title,
+  i.version,
+  i.description,
+  i.path
+from
+  openapi_info as i
+  left join openapi_component_security_scheme as s on i.path = s.path
+where
+  s.path is null;
+```
+
+```sql+sqlite
 select
   i.title,
   i.version,
@@ -47,7 +72,22 @@ where
 ### List OAuth 1.0 security schemes
 Explore the security schemes that utilize OAuth 1.0 for HTTP protocols. This can be useful in understanding the security mechanisms in place and identifying any potential areas for improvement.
 
-```sql
+```sql+postgres
+select
+  name,
+  type,
+  location,
+  description,
+  scheme,
+  path
+from
+  openapi_security_scheme
+where
+  type = 'http'
+  and scheme = 'oauth';
+```
+
+```sql+sqlite
 select
   name,
   type,
@@ -65,7 +105,22 @@ where
 ### List security schemes using basic HTTP authentication
 Explore which security schemes utilize basic HTTP authentication to gain insights into potential vulnerabilities or areas requiring additional security measures. This is useful in identifying weak spots in your system's security and implementing necessary improvements.
 
-```sql
+```sql+postgres
+select
+  name,
+  type,
+  location,
+  description,
+  scheme,
+  path
+from
+  openapi_security_scheme
+where
+  type = 'http'
+  and scheme = 'basic';
+```
+
+```sql+sqlite
 select
   name,
   type,

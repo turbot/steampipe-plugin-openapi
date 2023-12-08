@@ -16,7 +16,7 @@ The `openapi_component_response` table provides insights into the responses defi
 ### Basic info
 Explore the key details and descriptions within an API's response components to gain a better understanding of its structure and data. This can assist in planning how to interact with the API or troubleshoot issues.
 
-```sql
+```sql+postgres
 select
   key,
   description,
@@ -26,10 +26,20 @@ from
   openapi_component_response;
 ```
 
+```sql+sqlite
+select
+  key,
+  description,
+  content,
+  path
+from
+  openapi_component_response;
+```
+
 ### List unused response definitions
 Determine areas in your API where certain response definitions are not being utilized. This could help streamline your API by removing unnecessary definitions, making it easier to manage and understand.
 
-```sql
+```sql+postgres
 with list_used_response_defs as (
   select
     path,
@@ -62,10 +72,14 @@ from
   unused_response_definitions;
 ```
 
+```sql+sqlite
+Error: SQLite does not support array_agg, split_part, and unnest functions.
+```
+
 ### List response definitions without schema
 Discover the segments that lack a defined schema in the response components of your OpenAPI specifications. This can aid in identifying potential inconsistencies or gaps in your API documentation.
 
-```sql
+```sql+postgres
 select
   path,
   concat('components.responses.', key, '.content.', c ->> 'contentType') as paths
@@ -74,4 +88,15 @@ from
   jsonb_array_elements(content) as c
 where
   c ->> 'schema' is null;
+```
+
+```sql+sqlite
+select
+  path,
+  path || '.components.responses.' || key || '.content.' || json_extract(c.value, '$.contentType') as paths
+from
+  openapi_component_response,
+  json_each(content) as c
+where
+  json_extract(c.value, '$.schema') is null;
 ```

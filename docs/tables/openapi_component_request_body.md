@@ -16,7 +16,7 @@ The `openapi_component_request_body` table provides insights into the structure 
 ### Basic info
 Explore the essential components of an OpenAPI request body. This query is particularly useful for understanding the key elements that are required for a successful API request, along with their descriptions and content.
 
-```sql
+```sql+postgres
 select
   key,
   description,
@@ -26,10 +26,20 @@ from
   openapi_component_request_body;
 ```
 
+```sql+sqlite
+select
+  key,
+  description,
+  required,
+  content
+from
+  openapi_component_request_body;
+```
+
 ### List unused request body definitions
 Determine the areas in which request body definitions are unused in your OpenAPI paths. This is beneficial in identifying redundant components, helping to streamline your API documentation and maintain efficiency.
 
-```sql
+```sql+postgres
 with list_used_request_bodies as (
   select
     path,
@@ -64,10 +74,14 @@ from
   unused_request_body_definitions;
 ```
 
+```sql+sqlite
+Error: SQLite does not support array_agg, split_part, unnest and concat functions.
+```
+
 ### List request body definitions without schema
 Explore instances where request body definitions lack a schema. This can help identify potential areas in your API where data validation might be missing, thus improving overall data quality and consistency.
 
-```sql
+```sql+postgres
 select
   path,
   concat('components.requestBodies.', key, '.content.', c ->> 'contentType') as request_body_ref
@@ -76,4 +90,15 @@ from
   jsonb_array_elements(content) as c
 where
   c ->> 'schema' is null;
+```
+
+```sql+sqlite
+select
+  path,
+  'components.requestBodies.' || key || '.content.' || json_extract(c.value, '$.contentType') as request_body_ref
+from
+  openapi_component_request_body,
+  json_each(content) as c
+where
+  json_extract(c.value, '$.schema') is null;
 ```

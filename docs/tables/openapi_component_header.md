@@ -16,7 +16,18 @@ The `openapi_component_header` table provides insights into the headers of OpenA
 ### Basic info
 Explore the key aspects of an OpenAPI component such as its name, location, and description to gain insights into its configuration and understand its role within the overall system. This can be particularly useful in identifying potential areas for optimization or troubleshooting.
 
-```sql
+```sql+postgres
+select
+  key,
+  name,
+  location,
+  description,
+  path
+from
+  openapi_component_header;
+```
+
+```sql+sqlite
 select
   key,
   name,
@@ -30,7 +41,7 @@ from
 ### List unused header definitions
 Determine unused header definitions in your API's OpenAPI specification. This helps to maintain a lean and efficient API documentation by identifying and removing redundant header definitions.
 
-```sql
+```sql+postgres
 with list_available_headers as (
   select
     path,
@@ -64,10 +75,28 @@ from
   unused_headers_definitions;
 ```
 
+```sql+sqlite
+Error: SQLite does not support array_agg, split_part, and unnest functions.
+```
+
 ### List headers with no schema
 Explore which headers in your OpenAPI components are missing a schema, helping to identify potential areas for further definition and structure. This can be particularly useful for maintaining consistency and clarity in your API documentation.
 
-```sql
+```sql+postgres
+select
+  key,
+  location,
+  deprecated,
+  description,
+  path
+from
+  openapi_component_header
+where
+  schema is null
+  and schema_ref is null;
+```
+
+```sql+sqlite
 select
   key,
   location,
@@ -84,7 +113,21 @@ where
 ### List deprecated headers with no alternative mentioned in the description
 Identify instances where deprecated headers are being used without any alternative mentioned. This can help in updating your API usage to avoid potential issues in the future.
 
-```sql
+```sql+postgres
+select
+  key,
+  location,
+  deprecated,
+  description,
+  path
+from
+  openapi_component_header
+where
+  deprecated
+  and description is null;
+```
+
+```sql+sqlite
 select
   key,
   location,

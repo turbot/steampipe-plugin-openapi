@@ -16,7 +16,18 @@ The `openapi_path` table provides insights into the paths defined within an Open
 ### Basic info
 Explore the API paths in a project to determine if any are outdated or no longer in use. This can assist in maintaining the efficiency of your code by identifying and removing unnecessary elements.
 
-```sql
+```sql+postgres
+select
+  api_path,
+  deprecated,
+  description,
+  tags,
+  path
+from
+  openapi_path;
+```
+
+```sql+sqlite
 select
   api_path,
   deprecated,
@@ -30,7 +41,7 @@ from
 ### List all deprecated endpoints
 Uncover the details of outdated API endpoints in your application. This can help you identify areas that may need updates or replacement, ensuring your application stays current and secure.
 
-```sql
+```sql+postgres
 select
   api_path,
   description,
@@ -42,10 +53,34 @@ where
   deprecated;
 ```
 
+```sql+sqlite
+select
+  api_path,
+  description,
+  tags,
+  path
+from
+  openapi_path
+where
+  deprecated = 1;
+```
+
 ### List all GET method endpoints
 Explore all endpoints that use the GET method to understand how your API interacts with data. This can help optimize the performance and security of your API by identifying potential areas for improvement.
 
-```sql
+```sql+postgres
+select
+  api_path,
+  description,
+  parameters,
+  path
+from
+  openapi_path
+where
+  method = 'GET';
+```
+
+```sql+sqlite
 select
   api_path,
   description,
@@ -60,7 +95,7 @@ where
 ### Get the parameters required for a specific endpoint
 Explore the required parameters for a specific endpoint to better understand its necessary inputs and structure. This is particularly useful for ensuring proper API calls and data retrieval.
 
-```sql
+```sql+postgres
 select
   api_path,
   p ->> 'name' as param,
@@ -77,13 +112,41 @@ where
   api_path = '/org/{org_handle}/audit_log/get';
 ```
 
+```sql+sqlite
+select
+  api_path,
+  json_extract(p.value, '$.name') as param,
+  case
+    when json_extract(p.value, '$.required') is not null then 1
+    else 0
+  end as is_required,
+  p.value as schema,
+  path
+from
+  openapi_path,
+  json_each(parameters) as p
+where
+  api_path = '/org/{org_handle}/audit_log/get';
+```
+
 ### Get the success response schema of a specific endpoint
 Explore the structure of a successful response from a specific API endpoint. This can be useful to understand the data format and fields returned upon successful API calls, aiding in the development of applications that interact with this endpoint.
 
-```sql
+```sql+postgres
 select
   api_path,
   jsonb_pretty(responses -> '200') as success_response,
+  path
+from
+  openapi_path
+where
+  api_path = '/identity/{identity_handle}/get';
+```
+
+```sql+sqlite
+select
+  api_path,
+  responses as success_response,
   path
 from
   openapi_path

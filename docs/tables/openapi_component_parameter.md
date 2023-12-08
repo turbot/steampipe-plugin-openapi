@@ -16,7 +16,20 @@ The `openapi_component_parameter` table provides insights into the parameters of
 ### Basic info
 Explore the parameters of an OpenAPI component to understand their usage, including whether they are required or deprecated. This can assist in identifying areas for potential improvements or updates within your API structure.
 
-```sql
+```sql+postgres
+select
+  name,
+  description,
+  location,
+  deprecated,
+  required,
+  schema,
+  path
+from
+  openapi_component_parameter;
+```
+
+```sql+sqlite
 select
   name,
   description,
@@ -32,7 +45,7 @@ from
 ### List all supported parameters for a specific API endpoint
 Explore the different specifications of parameters for a particular API endpoint. This is useful to understand the requirements and potential deprecations for each parameter, aiding in effective API usage and maintenance.
 
-```sql
+```sql+postgres
 with list_parameters as (
   select
     api_path,
@@ -54,10 +67,48 @@ from
   join openapi_component_parameter as p on l.parameter_ref = concat('#/components/parameters/', p.name);
 ```
 
+```sql+sqlite
+with list_parameters as (
+  select
+    api_path,
+    json_extract(p.value, '$."$ref"') as parameter_ref
+  from
+    openapi_path,
+    json_each(parameters) as p
+  where
+    api_path = '/repos/{owner}/{repo}/issues/post'
+)
+select
+  l.api_path,
+  p.name as parameter_name,
+  p.required as is_required,
+  p.deprecated as is_deprecated,
+  p.schema as parameter_schema
+from
+  list_parameters as l
+  join openapi_component_parameter as p on l.parameter_ref = '#/components/parameters/' || p.name;
+```
+
 ### List parameters with no schema
 Discover the segments that have parameters without a defined schema, which can help identify potential areas of improvement or inconsistencies within your OpenAPI components. This could be particularly useful in maintaining or upgrading your API systems.
 
-```sql
+```sql+postgres
+select
+  name,
+  description,
+  location,
+  deprecated,
+  required,
+  schema,
+  path
+from
+  openapi_component_parameter
+where
+  schema is null
+  and schema_ref is null;
+```
+
+```sql+sqlite
 select
   name,
   description,
@@ -76,7 +127,7 @@ where
 ### List deprecated parameters with no alternative mentioned in the description
 Explore which parameters in your OpenAPI components are deprecated but lack a description, helping you to identify potential issues in your API documentation and ensure all deprecated parameters are correctly documented for future reference.
 
-```sql
+```sql+postgres
 select
   name,
   description,
@@ -89,5 +140,21 @@ from
   openapi_component_parameter
 where
   deprecated
+  and description is null;
+```
+
+```sql+sqlite
+select
+  name,
+  description,
+  location,
+  deprecated,
+  required,
+  schema,
+  path
+from
+  openapi_component_parameter
+where
+  deprecated = 1
   and description is null;
 ```

@@ -16,7 +16,18 @@ The `openapi_info` table provides insights into the OpenAPI specification of a R
 ### Basic info
 Explore the general information of an OpenAPI specification to gain insights into its title, description, version, contact details, and paths. This can be useful for understanding the overall structure and details of the API at a glance.
 
-```sql
+```sql+postgres
+select
+  title,
+  description,
+  version,
+  contact,
+  path
+from
+  openapi_info;
+```
+
+```sql+sqlite
 select
   title,
   description,
@@ -30,7 +41,7 @@ from
 ### Get the maintainer's contact information
 Explore the contact information of the maintainer to ensure effective communication and collaboration. This could be particularly beneficial for troubleshooting, seeking clarifications, or discussing potential enhancements.
 
-```sql
+```sql+postgres
 select
   title,
   version,
@@ -41,15 +52,39 @@ from
   openapi_info;
 ```
 
+```sql+sqlite
+select
+  title,
+  version,
+  json_extract(contact, '$.name') as maintainer_name,
+  json_extract(contact, '$.email') as maintainer_email,
+  path
+from
+  openapi_info;
+```
+
 ### List API specifications not using any license
 Explore which API specifications are not currently using any license. This can help identify potential compliance issues or areas where licensing needs to be updated or added.
 
-```sql
+```sql+postgres
 select
   title,
   version,
   contact ->> 'name' as maintainer_name,
   contact ->> 'email' as maintainer_email,
+  path
+from
+  openapi_info
+where
+  license is null;
+```
+
+```sql+sqlite
+select
+  title,
+  version,
+  json_extract(contact, '$.name') as maintainer_name,
+  json_extract(contact, '$.email') as maintainer_email,
   path
 from
   openapi_info
