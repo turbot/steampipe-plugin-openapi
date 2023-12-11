@@ -244,7 +244,4 @@ connection "openapi" {
 }
 ```
 
-## Get involved
 
-- Open source: https://github.com/turbot/steampipe-plugin-openapi
-- Community: [Join #steampipe on Slack →](https://turbot.com/community/join)
