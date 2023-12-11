@@ -8,6 +8,7 @@ short_name: "openapi"
 description: "Steampipe plugin to query introspection of the OpenAPI definition."
 og_description: "Query OpenAPI files with SQL! Open source CLI. No DB required."
 og_image: "/images/plugins/turbot/openapi-social-graphic.png"
+engines: ["steampipe", "sqlite", "postgres", "export"]
 ---
 
 # OpenAPI + Steampipe
