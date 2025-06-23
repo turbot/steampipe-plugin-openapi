@@ -7,7 +7,7 @@ toolchain go1.23.2
 require (
 	github.com/getkin/kin-openapi v0.115.0
 	github.com/turbot/go-kit v1.1.0
-	github.com/turbot/steampipe-plugin-sdk/v5 v5.11.7
+	github.com/turbot/steampipe-plugin-sdk/v5 v5.12.0
 )
 
 require (
