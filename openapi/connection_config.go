@@ -1,7 +1,7 @@
 package openapi
 
 import (
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
 )
 
 type openAPIConfig struct {
@@ -14,9 +14,9 @@ func ConfigInstance() interface{} {
 
 // GetConfig :: retrieve and cast connection config from query data
 func GetConfig(connection *plugin.Connection) openAPIConfig {
-	if connection == nil || connection.Config == nil {
+	if connection == nil || connection.GetConfig() == nil {
 		return openAPIConfig{}
 	}
-	config, _ := connection.Config.(openAPIConfig)
+	config, _ := connection.GetConfig().(openAPIConfig)
 	return config
 }
